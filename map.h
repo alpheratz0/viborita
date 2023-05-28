@@ -11,6 +11,26 @@
 		bt == MAP_BLOCK_VIBORITA_RIGHT || \
 		bt == MAP_BLOCK_VIBORITA_UP)
 
+#define MAP_BLOCK_TYPE_FROM_CHAR(ch) \
+	(ch == ' ' ? MAP_BLOCK_SPACE : \
+		ch == '=' ? MAP_BLOCK_WALL : \
+		ch == '*' ? MAP_BLOCK_FOOD : \
+		ch == '^' ? MAP_BLOCK_VIBORITA_UP : \
+		ch == '<' ? MAP_BLOCK_VIBORITA_LEFT : \
+		ch == 'v' ? MAP_BLOCK_VIBORITA_DOWN : \
+		ch == '>' ? MAP_BLOCK_VIBORITA_RIGHT : \
+		            MAP_BLOCK_INVALID)
+
+#define MAP_BLOCK_TYPE_TO_CHAR(bt) \
+	(bt == MAP_BLOCK_SPACE             ? ' ' : \
+		bt == MAP_BLOCK_WALL           ? '=' : \
+		bt == MAP_BLOCK_FOOD           ? '*' : \
+		bt == MAP_BLOCK_VIBORITA_UP    ? '^' : \
+		bt == MAP_BLOCK_VIBORITA_LEFT  ? '<' : \
+		bt == MAP_BLOCK_VIBORITA_DOWN  ? 'v' : \
+		bt == MAP_BLOCK_VIBORITA_RIGHT ? '>' : \
+		                                 '?')
+
 enum map_block_type {
 	MAP_BLOCK_SPACE,
 	MAP_BLOCK_WALL,
@@ -33,7 +53,13 @@ int map_copy(const struct map *from, struct map *to);
 int map_parse(struct map *map, const char *map_str);
 int map_parse_file(struct map *map, const char *path);
 int map_stringify(const struct map *map, size_t max_size, char *str);
+int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **bt);
 int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *bt);
 int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt);
+int map_get_vibora_prev_block(struct map *map, size_t row, size_t col, size_t *prev_row, size_t *prev_col);
+int map_get_vibora_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col);
+int map_is_head(struct map *map, size_t row, size_t col);
+int map_is_tail(struct map *map, size_t row, size_t col);
+int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t), size_t *row, size_t *col);
 int map_find_viborita_head(struct map *map, size_t *row, size_t *col);
 int map_find_viborita_tail(struct map *map, size_t *row, size_t *col);

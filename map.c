@@ -41,7 +41,7 @@ int map_copy(const struct map *from, struct map *to)
 	return 0;
 }
 
-size_t map_str_count_rows(const char *map_str)
+static size_t __map_str_count_rows(const char *map_str)
 {
 	size_t n_rows = 0;
 	const char *walk = map_str;
@@ -61,7 +61,7 @@ size_t map_str_count_rows(const char *map_str)
 	return n_rows;
 }
 
-size_t map_str_count_cols(const char *map_str)
+static size_t __map_str_count_cols(const char *map_str)
 {
 	size_t n_cols = 0;
 	for (const char *walk = map_str; *walk != '\n' && *walk != '\0'; ++walk)
@@ -70,36 +70,6 @@ size_t map_str_count_cols(const char *map_str)
 	}
 
 	return n_cols;
-}
-
-enum map_block_type map_block_type_from_char(char c)
-{
-	switch (c)
-	{
-		case ' ': return MAP_BLOCK_SPACE;
-		case '=': return MAP_BLOCK_WALL;
-		case '*': return MAP_BLOCK_FOOD;
-		case '^': return MAP_BLOCK_VIBORITA_UP;
-		case '<': return MAP_BLOCK_VIBORITA_LEFT;
-		case 'v': return MAP_BLOCK_VIBORITA_DOWN;
-		case '>': return MAP_BLOCK_VIBORITA_RIGHT;
-		default:  return MAP_BLOCK_INVALID;
-	}
-}
-
-char map_block_type_to_char(enum map_block_type bt)
-{
-	switch (bt)
-	{
-		case MAP_BLOCK_SPACE:          return ' ';
-		case MAP_BLOCK_WALL:           return '=';
-		case MAP_BLOCK_FOOD:           return '*';
-		case MAP_BLOCK_VIBORITA_UP:    return '^';
-		case MAP_BLOCK_VIBORITA_LEFT:  return '<';
-		case MAP_BLOCK_VIBORITA_DOWN:  return 'v';
-		case MAP_BLOCK_VIBORITA_RIGHT: return '>';
-		default:                       return '?';
-	}
 }
 
 int map_parse(struct map *map, const char *map_str)
@@ -113,8 +83,8 @@ int map_parse(struct map *map, const char *map_str)
 	}
 
 	/* count rows & columns */
-	size_t n_rows = map_str_count_rows(map_str);
-	size_t n_cols = map_str_count_cols(map_str);
+	size_t n_rows = __map_str_count_rows(map_str);
+	size_t n_cols = __map_str_count_cols(map_str);
 
 	if (n_rows == 0 || n_rows > MAX_ROWS ||
 			n_cols == 0 || n_cols > MAX_COLS)
@@ -157,7 +127,7 @@ int map_parse(struct map *map, const char *map_str)
 			row += 1;
 			break;
 		default:
-			block_type = map_block_type_from_char(block_char);
+			block_type = MAP_BLOCK_TYPE_FROM_CHAR(block_char);
 			if (col >= n_cols || row >= n_rows || block_type == MAP_BLOCK_INVALID)
 			{
 				dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
@@ -211,7 +181,7 @@ int map_stringify(const struct map *map, size_t max_size, char *str)
 	{
 		for (size_t col = 0; col < map->n_columns; ++col)
 		{
-			*walk++ = map_block_type_to_char(map->map[row][col]);
+			*walk++ = MAP_BLOCK_TYPE_TO_CHAR(map->map[row][col]);
 		}
 	}
 	*walk = '\0';
@@ -256,7 +226,7 @@ int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *
 
 int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
 {
-	if (NULL == map || map_block_type_to_char(bt) == '?')
+	if (NULL == map || MAP_BLOCK_TYPE_TO_CHAR(bt) == '?')
 	{
 		dbg_print(stderr, "%s: set: invalid arguments "
 				"{(map=%p), (col=%zu), (row=%zu), (bt=%lu)}\n",
