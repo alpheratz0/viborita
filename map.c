@@ -27,6 +27,20 @@ int map_init(struct map *map, size_t n_cols, size_t n_rows)
 	return 0;
 }
 
+int map_copy(const struct map *from, struct map *to)
+{
+	if (NULL == from || NULL == to)
+	{
+		dbg_print(stderr, "%s: map_copy: invalid arguments "
+				"{(from=%p), (to=%p)}\n",
+				app_name, from, to);
+		return -1;
+	}
+
+	memcpy(to, from, sizeof(struct map));
+	return 0;
+}
+
 size_t map_str_count_rows(const char *map_str)
 {
 	size_t n_rows = 0;
