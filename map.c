@@ -125,7 +125,7 @@ int map_parse(struct map *map, const char *map_str)
 				return -1;
 			}
 			block_type = _map_block_type_from_char(block_char);
-			map->map[col][row] = block_type;
+			map->map[row][col] = block_type;
 			col++;
 			break;
 		default:
