@@ -13,7 +13,7 @@ int map_init(struct map *map, size_t n_cols, size_t n_rows)
 			n_rows == 0 || n_rows > MAX_ROWS)
 	{
 		dbg_print(stderr, "%s: map_init: invalid arguments "
-				"{(map = %p), (n_cols = %zu), (n_rows = %zu)}\n",
+				"{(map=%p), (n_cols=%zu), (n_rows=%zu)}\n",
 				app_name, map, n_cols, n_rows);
 		return -1;
 	}
@@ -103,14 +103,14 @@ int map_parse(struct map *map, const char *map_str)
 
 	if (n_rows == 0 || n_rows > MAX_ROWS)
 	{
-		dbg_print(stderr, "%s: map_parse: invalid rows (rows = %zu)\n",
+		dbg_print(stderr, "%s: map_parse: invalid rows (rows=%zu)\n",
 				app_name, n_rows);
 		return -1;
 	}
 
 	if (n_cols == 0 || n_cols > MAX_COLS)
 	{
-		dbg_print(stderr, "%s: map_parse: invalid cols (cols = %zu)\n",
+		dbg_print(stderr, "%s: map_parse: invalid cols (cols=%zu)\n",
 				app_name, n_cols);
 		return -1;
 	}
