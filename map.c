@@ -71,9 +71,12 @@ enum map_block_type map_block_type_from_char(char c)
 	{
 		case ' ': return MAP_SPACE;
 		case '=': return MAP_BLOCK;
-		case 'o': return MAP_VIBORITA;
 		case '*': return MAP_FOOD;
-		default:  return MAP_SPACE;
+		case '^': return MAP_VIBORITA_UP;
+		case '<': return MAP_VIBORITA_LEFT;
+		case 'v': return MAP_VIBORITA_DOWN;
+		case '>': return MAP_VIBORITA_RIGHT;
+		default:  return MAP_INVALID;
 	}
 }
 
@@ -81,11 +84,14 @@ char map_block_type_to_char(enum map_block_type bt)
 {
 	switch (bt)
 	{
-		case MAP_SPACE:    return ' ';
-		case MAP_BLOCK:    return '=';
-		case MAP_VIBORITA: return 'o';
-		case MAP_FOOD:     return '*';
-		default:           return ' ';
+		case MAP_SPACE: return ' ';
+		case MAP_BLOCK: return '=';
+		case MAP_FOOD: return '*';
+		case MAP_VIBORITA_UP: return '^';
+		case MAP_VIBORITA_LEFT: return '<';
+		case MAP_VIBORITA_DOWN: return 'v';
+		case MAP_VIBORITA_RIGHT: return '>';
+		default: return '?';
 	}
 }
 
@@ -140,24 +146,18 @@ int map_parse(struct map *map, const char *map_str)
 			col = 0;
 			row += 1;
 			break;
-		case ' ': /* SPACE */
-		case '=': /* BLOCK */
-		case 'o': /* VIBORITA */
-		case '*': /* FOOD */
-			if (col >= n_cols || row >= n_rows)
+		default:
+			block_type = map_block_type_from_char(block_char);
+			if (col >= n_cols || row >= n_rows || block_type == MAP_INVALID)
 			{
 				dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
 						app_name, row + 1, col + 1);
 				return -1;
 			}
-			block_type = map_block_type_from_char(block_char);
+
 			map->map[row][col] = block_type;
 			col++;
 			break;
-		default:
-			dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
-					app_name, row + 1, col + 1);
-			return -1;
 	}
 
 	return 0;
