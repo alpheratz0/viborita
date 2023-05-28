@@ -69,14 +69,14 @@ enum map_block_type map_block_type_from_char(char c)
 {
 	switch (c)
 	{
-		case ' ': return MAP_SPACE;
-		case '=': return MAP_BLOCK;
-		case '*': return MAP_FOOD;
-		case '^': return MAP_VIBORITA_UP;
-		case '<': return MAP_VIBORITA_LEFT;
-		case 'v': return MAP_VIBORITA_DOWN;
-		case '>': return MAP_VIBORITA_RIGHT;
-		default:  return MAP_INVALID;
+		case ' ': return MAP_BLOCK_SPACE;
+		case '=': return MAP_BLOCK_WALL;
+		case '*': return MAP_BLOCK_FOOD;
+		case '^': return MAP_BLOCK_VIBORITA_UP;
+		case '<': return MAP_BLOCK_VIBORITA_LEFT;
+		case 'v': return MAP_BLOCK_VIBORITA_DOWN;
+		case '>': return MAP_BLOCK_VIBORITA_RIGHT;
+		default:  return MAP_BLOCK_INVALID;
 	}
 }
 
@@ -84,14 +84,14 @@ char map_block_type_to_char(enum map_block_type bt)
 {
 	switch (bt)
 	{
-		case MAP_SPACE: return ' ';
-		case MAP_BLOCK: return '=';
-		case MAP_FOOD: return '*';
-		case MAP_VIBORITA_UP: return '^';
-		case MAP_VIBORITA_LEFT: return '<';
-		case MAP_VIBORITA_DOWN: return 'v';
-		case MAP_VIBORITA_RIGHT: return '>';
-		default: return '?';
+		case MAP_BLOCK_SPACE:          return ' ';
+		case MAP_BLOCK_WALL:           return '=';
+		case MAP_BLOCK_FOOD:           return '*';
+		case MAP_BLOCK_VIBORITA_UP:    return '^';
+		case MAP_BLOCK_VIBORITA_LEFT:  return '<';
+		case MAP_BLOCK_VIBORITA_DOWN:  return 'v';
+		case MAP_BLOCK_VIBORITA_RIGHT: return '>';
+		default:                       return '?';
 	}
 }
 
