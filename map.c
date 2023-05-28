@@ -48,11 +48,15 @@ size_t map_str_count_rows(const char *map_str)
 	for (; *walk != '\0'; ++walk)
 	{
 		if (*walk == '\n')
+		{
 			n_rows += 1;
+		}
 	}
 
 	if (walk != map_str && walk[-1] != '\n')
+	{
 		n_rows += 1;
+	}
 
 	return n_rows;
 }
@@ -61,7 +65,10 @@ size_t map_str_count_cols(const char *map_str)
 {
 	size_t n_cols = 0;
 	for (const char *walk = map_str; *walk != '\n' && *walk != '\0'; ++walk)
+	{
 		n_cols += 1;
+	}
+
 	return n_cols;
 }
 
@@ -97,21 +104,24 @@ char map_block_type_to_char(enum map_block_type bt)
 
 int map_parse(struct map *map, const char *map_str)
 {
+	if (NULL == map || NULL == map_str)
+	{
+		dbg_print(stderr, "%s: map_parse: invalid arguments "
+				"{(map=%p), (map_str=%p)}\n",
+				app_name, map, map_str);
+		return -1;
+	}
+
 	/* count rows & columns */
 	size_t n_rows = map_str_count_rows(map_str);
 	size_t n_cols = map_str_count_cols(map_str);
 
-	if (n_rows == 0 || n_rows > MAX_ROWS)
+	if (n_rows == 0 || n_rows > MAX_ROWS ||
+			n_cols == 0 || n_cols > MAX_COLS)
 	{
-		dbg_print(stderr, "%s: map_parse: invalid rows (rows=%zu)\n",
-				app_name, n_rows);
-		return -1;
-	}
-
-	if (n_cols == 0 || n_cols > MAX_COLS)
-	{
-		dbg_print(stderr, "%s: map_parse: invalid cols (cols=%zu)\n",
-				app_name, n_cols);
+		dbg_print(stderr, "%s: map_parse: invalid map "
+				"{(rows=%zu), (cols=%zu)}\n",
+				app_name, n_rows, n_cols);
 		return -1;
 	}
 
@@ -165,6 +175,14 @@ int map_parse(struct map *map, const char *map_str)
 
 int map_parse_file(struct map *map, const char *path)
 {
+	if (NULL == map || NULL == path)
+	{
+		dbg_print(stderr, "%s: map_parse_file: invalid arguments "
+				"{(map=%p), (path=%p)}\n",
+				app_name, map, path);
+		return -1;
+	}
+
 	extern int dump_file_cts(const char *, size_t, char *);
 	char map_str[(MAX_COLS+1) * MAX_ROWS + 1 /* NUL char */];
 	if (dump_file_cts(path, sizeof(map_str), map_str) < 0)
@@ -180,18 +198,22 @@ int map_parse_file(struct map *map, const char *path)
 int map_stringify(const struct map *map, size_t max_size, char *str)
 {
 	size_t requested_size = (map->n_rows * (map->n_columns + 1) + 1);
-	if (max_size < requested_size)
+	if (NULL == map || NULL == str || max_size == 0)
 	{
-		dbg_print(stderr, "%s: map_stringify: max_size too small "
-				"(max_size=%zu, requested_size=%zu)\n",
-				app_name, max_size, requested_size);
+		dbg_print(stderr, "%s: map_stringify: invalid arguments "
+				"{(map=%p), (max_size=%zu, requested_size=%zu), (str=%p)}\n",
+				app_name, map, max_size, requested_size, str);
 		return -1;
 	}
 
 	char *walk = str;
 	for (size_t row = 0; row < map->n_rows; ++row, *walk++ = '\n')
+	{
 		for (size_t col = 0; col < map->n_columns; ++col)
+		{
 			*walk++ = map_block_type_to_char(map->map[row][col]);
+		}
+	}
 	*walk = '\0';
 
 	return 0;
@@ -199,17 +221,12 @@ int map_stringify(const struct map *map, size_t max_size, char *str)
 
 int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **bt)
 {
-	if (col >= map->n_columns)
+	if (col >= map->n_columns ||
+			row >= map->n_rows)
 	{
-		dbg_print(stderr, "%s: map_get_ref: invalid column index (col=%zu)",
-				app_name, col);
-		return -1;
-	}
-
-	if (row >= map->n_rows)
-	{
-		dbg_print(stderr, "%s: map_get_ref: invalid row index (row=%zu)",
-				app_name, row);
+		dbg_print(stderr, "%s: map_get_ref: invalid index "
+				"{(col=%zu), (row=%zu)}\n",
+				app_name, col, row);
 		return -1;
 	}
 
@@ -219,6 +236,14 @@ int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **b
 
 int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *bt)
 {
+	if (NULL == map || NULL == bt)
+	{
+		dbg_print(stderr, "%s: map_get: invalid arguments "
+				"{(map=%p), (col=%zu), (row=%zu), (bt=%p)}\n",
+				app_name, map, col, row, bt);
+		return -1;
+	}
+
 	enum map_block_type *block_ref;
 	if (map_get_ref((struct map *)map, col, row, &block_ref) < 0)
 	{
@@ -231,6 +256,13 @@ int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *
 
 int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
 {
+	if (NULL == map || map_block_type_to_char(bt) == '?')
+	{
+		dbg_print(stderr, "%s: set: invalid arguments "
+				"{(map=%p), (col=%zu), (row=%zu), (bt=%lu)}\n",
+				app_name, map, col, row, bt);
+		return -1;
+	}
 	enum map_block_type *block_ref;
 	if (map_get_ref(map, col, row, &block_ref) < 0)
 	{
