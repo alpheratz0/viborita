@@ -378,3 +378,51 @@ int map_find_viborita_tail(struct map *map, size_t *row, size_t *col)
 
 	return 0;
 }
+
+int map_advance(struct map *map, enum map_viborita_state *viborita_state)
+{
+	size_t head_row, head_col;
+	size_t head_next_row, head_next_col;
+	size_t tail_row, tail_col;
+
+	if (NULL == map)
+	{
+		return -1;
+	}
+
+	if (map_find_viborita_head(map, &head_row, &head_col) < 0)
+	{
+		return -1;
+	}
+
+	if (map_find_viborita_tail(map, &tail_row, &tail_col) < 0)
+	{
+		return -1;
+	}
+
+	// Check if the viborita goes outside the map.
+	if (map_get_vibora_next_block(map, head_row, head_col, &head_next_row, &head_next_col) < 0)
+	{
+		*viborita_state = MAP_VIBORITA_DEAD;
+		return 0;
+	}
+
+	switch (map->map[head_next_row][head_next_col])
+	{
+		case MAP_BLOCK_SPACE:
+			map->map[head_next_row][head_next_col] = map->map[head_row][head_col];
+			*viborita_state = MAP_VIBORITA_IDLE;
+			break;
+		case MAP_BLOCK_FOOD:
+			map->map[head_next_row][head_next_col] = map->map[head_row][head_col];
+			*viborita_state = MAP_VIBORITA_EATING;
+			break;
+		default:
+			*viborita_state = MAP_VIBORITA_DEAD;
+			return 0;
+	}
+
+	map->map[tail_row][tail_col] = MAP_BLOCK_SPACE;
+
+	return 0;
+}
