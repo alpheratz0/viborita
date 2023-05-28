@@ -31,6 +31,10 @@
 		bt == MAP_BLOCK_VIBORITA_RIGHT ? '>' : \
 		                                 '?')
 
+#define MAP_FOR_EACH_BLOCK(m, row, col, block) \
+	for (size_t row = 0, col = 0; row < (m)->n_rows; ++row, col = 0) \
+		for (enum map_block_type block; col < (m)->n_columns && (block = (m)->map[row][col]) == block; ++col) \
+
 enum map_block_type {
 	MAP_BLOCK_SPACE,
 	MAP_BLOCK_WALL,
