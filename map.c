@@ -63,6 +63,18 @@ static enum map_block_type _map_block_type_from_char(char c)
 	}
 }
 
+static char _map_block_type_to_char(enum map_block_type bt)
+{
+	switch (bt)
+	{
+		case MAP_SPACE:    return ' ';
+		case MAP_BLOCK:    return '=';
+		case MAP_VIBORITA: return 'o';
+		case MAP_FOOD:     return '*';
+		default:           return ' ';
+	}
+}
+
 int map_parse(struct map *map, const char *map_str)
 {
 	/* count rows & columns */
@@ -151,7 +163,22 @@ int map_parse_file(struct map *map, const char *path)
 	return map_parse(map, map_str);
 }
 
-void map_print(const struct map *map)
+int map_stringify(const struct map *map, size_t max_size, char *str)
 {
+	size_t requested_size = (map->n_rows * (map->n_columns + 1) + 1);
+	if (max_size < requested_size)
+	{
+		dbg_print(stderr, "%s: map_stringify: max_size too small "
+				"(max_size=%zu, requested_size=%zu)\n",
+				app_name, max_size, requested_size);
+		return -1;
+	}
 
+	char *walk = str;
+	for (size_t row = 0; row < map->n_rows; ++row, *walk++ = '\n')
+		for (size_t col = 0; col < map->n_columns; ++col)
+			*walk++ = _map_block_type_to_char(map->map[row][col]);
+	*walk = '\0';
+
+	return 0;
 }

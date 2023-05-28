@@ -21,4 +21,4 @@ struct map {
 int map_init(struct map *map, size_t n_cols, size_t n_rows);
 int map_parse(struct map *map, const char *map_str);
 int map_parse_file(struct map *map, const char *path);
-void map_print(const struct map *map);
+int map_stringify(const struct map *map, size_t max_size, char *str);
