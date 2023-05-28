@@ -18,7 +18,7 @@ int map_init(struct map *map, size_t n_cols, size_t n_rows)
 		return -1;
 	}
 
-	memset(map->map, 0, MAX_ROWS * MAX_COLS * sizeof(int));
+	memset(map->map, 0, sizeof(map->map));
 
 	map->n_columns = n_cols;
 	map->n_rows = n_rows;
