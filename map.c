@@ -148,7 +148,7 @@ int map_parse(struct map *map, const char *map_str)
 			break;
 		default:
 			block_type = map_block_type_from_char(block_char);
-			if (col >= n_cols || row >= n_rows || block_type == MAP_INVALID)
+			if (col >= n_cols || row >= n_rows || block_type == MAP_BLOCK_INVALID)
 			{
 				dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
 						app_name, row + 1, col + 1);
