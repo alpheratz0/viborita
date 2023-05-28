@@ -272,3 +272,139 @@ int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
 	*block_ref = bt;
 	return 0;
 }
+
+int map_get_vibora_prev_block(struct map *map, size_t row, size_t col, size_t *prev_row, size_t *prev_col)
+{
+	if (col > 0)
+	{
+		*prev_row = row; *prev_col = col - 1;
+		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_RIGHT)
+		{
+			return 0;
+		}
+	}
+	if (col < map->n_columns - 1)
+	{
+		*prev_row = row; *prev_col = col + 1;
+		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_LEFT)
+		{
+			return 0;
+		}
+	}
+	if (row > 0)
+	{
+		*prev_row = row - 1; *prev_col = col;
+		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_DOWN)
+		{
+			return 0;
+		}
+	}
+	if (row < map->n_rows - 1)
+	{
+		*prev_row = row + 1; *prev_col = col;
+		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_UP)
+		{
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int map_get_vibora_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col)
+{
+	int tmp_next_row = (int) row,
+		tmp_next_col = (int) col;
+
+	switch (map->map[row][col])
+	{
+		case MAP_BLOCK_VIBORITA_UP:    tmp_next_row -= 1; break;
+		case MAP_BLOCK_VIBORITA_DOWN:  tmp_next_row += 1; break;
+		case MAP_BLOCK_VIBORITA_LEFT:  tmp_next_col -= 1; break;
+		case MAP_BLOCK_VIBORITA_RIGHT: tmp_next_col += 1; break;
+		default: return -1;
+	}
+
+	if (tmp_next_row < 0 || tmp_next_row >= map->n_rows ||
+			tmp_next_col < 0 || tmp_next_col >= map->n_columns)
+	{
+		return -1;
+	}
+
+	*next_row = tmp_next_row;
+	*next_col = tmp_next_col;
+
+	return 0;
+}
+
+int map_is_head(struct map *map, size_t row, size_t col)
+{
+	enum map_block_type block = map->map[row][col];
+	size_t next_row, next_col;
+
+	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
+	{
+		return 0;
+	}
+	if (map_get_vibora_next_block(map, row, col, &next_row, &next_col) < 0 ||
+			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[next_row][next_col]))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int map_is_tail(struct map *map, size_t row, size_t col)
+{
+	enum map_block_type block = map->map[row][col];
+	size_t prev_row, prev_col;
+
+	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
+	{
+		return 0;
+	}
+	if (map_get_vibora_prev_block(map, row, col, &prev_row, &prev_col) < 0 ||
+			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[prev_row][prev_col]))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t), size_t *row, size_t *col)
+{
+	for (size_t r = 0; r < map->n_rows; r += 1)
+	{
+		for (size_t c = 0; c < map->n_columns; c += 1)
+		{
+			if (pred(map, r, c) > 0)
+			{
+				*row = r;
+				*col = c;
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int map_find_viborita_head(struct map *map, size_t *row, size_t *col)
+{
+	if (map_find(map, map_is_head, row, col) <= 0)
+	{
+		return -1;
+	}
+
+	return 0;
+}
+
+int map_find_viborita_tail(struct map *map, size_t *row, size_t *col)
+{
+	if (map_find(map, map_is_tail, row, col) <= 0)
+	{
+		return -1;
+	}
+
+	return 0;
+}
