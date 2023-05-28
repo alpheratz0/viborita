@@ -182,3 +182,47 @@ int map_stringify(const struct map *map, size_t max_size, char *str)
 
 	return 0;
 }
+
+int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **bt)
+{
+	if (col >= map->n_columns)
+	{
+		dbg_print(stderr, "%s: map_get_ref: invalid column index (col=%zu)",
+				app_name, col);
+		return -1;
+	}
+
+	if (row >= map->n_rows)
+	{
+		dbg_print(stderr, "%s: map_get_ref: invalid row index (row=%zu)",
+				app_name, row);
+		return -1;
+	}
+
+	*bt = &map->map[row][col];
+	return 0;
+}
+
+int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *bt)
+{
+	enum map_block_type *block_ref;
+	if (map_get_ref((struct map *)map, col, row, &block_ref) < 0)
+	{
+		dbg_print(stderr, "%s: map_get: map_get_ref failed\n", app_name);
+		return -1;
+	}
+	*bt = *block_ref;
+	return 0;
+}
+
+int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
+{
+	enum map_block_type *block_ref;
+	if (map_get_ref(map, col, row, &block_ref) < 0)
+	{
+		dbg_print(stderr, "%s: map_set: map_get_ref failed\n", app_name);
+		return -1;
+	}
+	*block_ref = bt;
+	return 0;
+}
