@@ -422,7 +422,10 @@ int map_advance(struct map *map, enum map_viborita_state *viborita_state)
 			return 0;
 	}
 
-	map->map[tail_row][tail_col] = MAP_BLOCK_SPACE;
+	if (*viborita_state != MAP_VIBORITA_EATING)
+	{
+		map->map[tail_row][tail_col] = MAP_BLOCK_SPACE;
+	}
 
 	return 0;
 }
