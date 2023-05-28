@@ -140,7 +140,7 @@ int map_parse(struct map *map, const char *map_str)
 int map_parse_file(struct map *map, const char *path)
 {
 	extern int dump_file_cts(const char *, size_t, char *);
-	char map_str[(MAX_COLS+1) * MAX_ROWS];
+	char map_str[(MAX_COLS+1) * MAX_ROWS + 1 /* NUL char */];
 	if (dump_file_cts(path, sizeof(map_str), map_str) < 0)
 	{
 		dbg_print(stderr, "%s: map_parse_file: could not open: %s\n",
