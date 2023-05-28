@@ -27,7 +27,7 @@ int map_init(struct map *map, size_t n_cols, size_t n_rows)
 	return 0;
 }
 
-static size_t _map_str_count_rows(const char *map_str)
+size_t map_str_count_rows(const char *map_str)
 {
 	size_t n_rows = 0;
 	const char *walk = map_str;
@@ -43,7 +43,7 @@ static size_t _map_str_count_rows(const char *map_str)
 	return n_rows;
 }
 
-static size_t _map_str_count_cols(const char *map_str)
+size_t map_str_count_cols(const char *map_str)
 {
 	size_t n_cols = 0;
 	for (const char *walk = map_str; *walk != '\n' && *walk != '\0'; ++walk)
@@ -51,7 +51,7 @@ static size_t _map_str_count_cols(const char *map_str)
 	return n_cols;
 }
 
-static enum map_block_type _map_block_type_from_char(char c)
+enum map_block_type map_block_type_from_char(char c)
 {
 	switch (c)
 	{
@@ -63,7 +63,7 @@ static enum map_block_type _map_block_type_from_char(char c)
 	}
 }
 
-static char _map_block_type_to_char(enum map_block_type bt)
+char map_block_type_to_char(enum map_block_type bt)
 {
 	switch (bt)
 	{
@@ -78,8 +78,8 @@ static char _map_block_type_to_char(enum map_block_type bt)
 int map_parse(struct map *map, const char *map_str)
 {
 	/* count rows & columns */
-	size_t n_rows = _map_str_count_rows(map_str);
-	size_t n_cols = _map_str_count_cols(map_str);
+	size_t n_rows = map_str_count_rows(map_str);
+	size_t n_cols = map_str_count_cols(map_str);
 
 	if (n_rows == 0 || n_rows > MAX_ROWS)
 	{
@@ -136,7 +136,7 @@ int map_parse(struct map *map, const char *map_str)
 						app_name, row + 1, col + 1);
 				return -1;
 			}
-			block_type = _map_block_type_from_char(block_char);
+			block_type = map_block_type_from_char(block_char);
 			map->map[row][col] = block_type;
 			col++;
 			break;
@@ -177,7 +177,7 @@ int map_stringify(const struct map *map, size_t max_size, char *str)
 	char *walk = str;
 	for (size_t row = 0; row < map->n_rows; ++row, *walk++ = '\n')
 		for (size_t col = 0; col < map->n_columns; ++col)
-			*walk++ = _map_block_type_to_char(map->map[row][col]);
+			*walk++ = map_block_type_to_char(map->map[row][col]);
 	*walk = '\0';
 
 	return 0;
