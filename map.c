@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "map.h"
 
 // Returns the numbers of rows an unparsed map has.
@@ -303,5 +304,25 @@ int map_advance(struct map *map, enum map_viborita_state *viborita_state)
 	map->head_row = head_next_row;
 	map->head_col = head_next_col;
 
+	return 0;
+}
+
+int map_spawn_food(struct map *map)
+{
+	size_t n_space_blocks = 0;
+	MAP_FOR_EACH_BLOCK(map, row, col, block)
+		if (block == MAP_BLOCK_SPACE)
+			n_space_blocks += 1;
+	if (n_space_blocks == 0)
+		return -1;
+	size_t n_food_block = rand() % n_space_blocks;
+	MAP_FOR_EACH_BLOCK(map, row, col, block)
+	{
+		if (block != MAP_BLOCK_SPACE)
+			continue;
+		if (n_food_block == 0)
+			map->map[row][col] = MAP_BLOCK_FOOD;
+		n_food_block -= 1;
+	}
 	return 0;
 }

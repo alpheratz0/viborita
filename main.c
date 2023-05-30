@@ -8,7 +8,7 @@ main(void)
 {
 	struct map default_map;
 	struct map pmap; // Playing map.
-	enum map_viborita_state viborita_state;
+	enum map_viborita_state viborita_state = MAP_VIBORITA_IDLE;
 	char map_str[2949];
 	int c;
 
@@ -24,6 +24,9 @@ RESET:
 
 	do
 	{
+		if (viborita_state == MAP_VIBORITA_EATING)
+			map_spawn_food(&pmap);
+
 		usleep(100000);
 
 		while ((c = getch()) != ERR) switch (c)

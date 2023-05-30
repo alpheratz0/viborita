@@ -82,3 +82,4 @@ int map_find_viborita_head(struct map *map, size_t *row, size_t *col);
 int map_find_viborita_tail(struct map *map, size_t *row, size_t *col);
 int map_set_viborita_direction(struct map *map, enum map_block_type dir);
 int map_advance(struct map *map, enum map_viborita_state *viborita_state);
+int map_spawn_food(struct map *map);
