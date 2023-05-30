@@ -11,6 +11,12 @@
 		bt == MAP_BLOCK_VIBORITA_RIGHT || \
 		bt == MAP_BLOCK_VIBORITA_UP)
 
+#define MAP_BLOCK_TYPE_IS_VIBORA_OPPOSITE(bt1, bt2) \
+	((bt1 == MAP_BLOCK_VIBORITA_UP && bt2 == MAP_BLOCK_VIBORITA_DOWN) || \
+		 (bt2 == MAP_BLOCK_VIBORITA_UP && bt1 == MAP_BLOCK_VIBORITA_DOWN) || \
+		 (bt1 == MAP_BLOCK_VIBORITA_LEFT && bt2 == MAP_BLOCK_VIBORITA_RIGHT) || \
+		 (bt2 == MAP_BLOCK_VIBORITA_LEFT && bt1 == MAP_BLOCK_VIBORITA_RIGHT))
+
 #define MAP_BLOCK_TYPE_FROM_CHAR(ch) \
 	(ch == ' ' ? MAP_BLOCK_SPACE : \
 		ch == '=' ? MAP_BLOCK_WALL : \
@@ -53,24 +59,26 @@ enum map_viborita_state {
 };
 
 struct map {
-	size_t n_columns;
-	size_t n_rows;
+	size_t head_row, head_col;
+	size_t tail_row, tail_col;
+	size_t n_columns, n_rows;
 	enum map_block_type map[MAX_COLS][MAX_ROWS];
+	enum map_block_type dir;
 };
 
-int map_init(struct map *map, size_t n_cols, size_t n_rows);
-int map_copy(const struct map *from, struct map *to);
+void map_copy(const struct map *from, struct map *to);
 int map_parse(struct map *map, const char *map_str);
 int map_parse_file(struct map *map, const char *path);
 int map_stringify(const struct map *map, size_t max_size, char *str);
 int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **bt);
 int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *bt);
 int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt);
-int map_get_vibora_prev_block(struct map *map, size_t row, size_t col, size_t *prev_row, size_t *prev_col);
-int map_get_vibora_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col);
+int map_find_viborita_prev_block(struct map *map, size_t row, size_t col, size_t *prev_row, size_t *prev_col);
+int map_find_viborita_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col);
 int map_is_head(struct map *map, size_t row, size_t col);
 int map_is_tail(struct map *map, size_t row, size_t col);
 int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t), size_t *row, size_t *col);
 int map_find_viborita_head(struct map *map, size_t *row, size_t *col);
 int map_find_viborita_tail(struct map *map, size_t *row, size_t *col);
+int map_set_viborita_direction(struct map *map, enum map_block_type dir);
 int map_advance(struct map *map, enum map_viborita_state *viborita_state);

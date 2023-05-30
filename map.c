@@ -1,139 +1,75 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 #include "map.h"
-#include "debug.h"
 
-extern char *app_name;
-
-int map_init(struct map *map, size_t n_cols, size_t n_rows)
+// Returns the numbers of rows an unparsed map has.
+static size_t __map_str_count_rows(const char *map_str)
 {
-	if (map == NULL ||
-			n_cols == 0 || n_cols > MAX_COLS ||
-			n_rows == 0 || n_rows > MAX_ROWS)
-	{
-		dbg_print(stderr, "%s: map_init: invalid arguments "
-				"{(map=%p), (n_cols=%zu), (n_rows=%zu)}\n",
-				app_name, map, n_cols, n_rows);
+	size_t n_rows = 0;
+	const char *walk = map_str;
+	for (; *walk != '\0'; ++walk)
+		if (*walk == '\n')
+			n_rows += 1;
+	if (walk != map_str && walk[-1] != '\n')
+		n_rows += 1;
+	return n_rows;
+}
+
+// Returns the numbers of columns an unparsed map has.
+static size_t __map_str_count_columns(const char *map_str)
+{
+	size_t n_cols = 0;
+	for (; *map_str != '\n' && *map_str != '\0'; ++map_str)
+		n_cols += 1;
+	return n_cols;
+}
+
+// Copies one map to another.
+void map_copy(const struct map *from, struct map *to)
+{
+	memcpy(to, from, sizeof(struct map));
+}
+
+// Parses a map from a string.
+int map_parse(struct map *map, const char *map_str)
+{
+	size_t row = 0, col = 0;
+	char block_char;
+	enum map_block_type block_type;
+
+	size_t n_rows = __map_str_count_rows(map_str);
+	size_t n_cols = __map_str_count_columns(map_str);
+
+	if (n_rows == 0 || n_rows > MAX_ROWS ||
+			n_cols == 0 || n_cols > MAX_COLS)
 		return -1;
-	}
 
 	memset(map->map, 0, sizeof(map->map));
 
 	map->n_columns = n_cols;
 	map->n_rows = n_rows;
 
-	/* OK */
-	return 0;
-}
-
-int map_copy(const struct map *from, struct map *to)
-{
-	if (NULL == from || NULL == to)
-	{
-		dbg_print(stderr, "%s: map_copy: invalid arguments "
-				"{(from=%p), (to=%p)}\n",
-				app_name, from, to);
-		return -1;
-	}
-
-	memcpy(to, from, sizeof(struct map));
-	return 0;
-}
-
-static size_t __map_str_count_rows(const char *map_str)
-{
-	size_t n_rows = 0;
-	const char *walk = map_str;
-	for (; *walk != '\0'; ++walk)
-	{
-		if (*walk == '\n')
-		{
-			n_rows += 1;
-		}
-	}
-
-	if (walk != map_str && walk[-1] != '\n')
-	{
-		n_rows += 1;
-	}
-
-	return n_rows;
-}
-
-static size_t __map_str_count_cols(const char *map_str)
-{
-	size_t n_cols = 0;
-	for (const char *walk = map_str; *walk != '\n' && *walk != '\0'; ++walk)
-	{
-		n_cols += 1;
-	}
-
-	return n_cols;
-}
-
-int map_parse(struct map *map, const char *map_str)
-{
-	if (NULL == map || NULL == map_str)
-	{
-		dbg_print(stderr, "%s: map_parse: invalid arguments "
-				"{(map=%p), (map_str=%p)}\n",
-				app_name, map, map_str);
-		return -1;
-	}
-
-	/* count rows & columns */
-	size_t n_rows = __map_str_count_rows(map_str);
-	size_t n_cols = __map_str_count_cols(map_str);
-
-	if (n_rows == 0 || n_rows > MAX_ROWS ||
-			n_cols == 0 || n_cols > MAX_COLS)
-	{
-		dbg_print(stderr, "%s: map_parse: invalid map "
-				"{(rows=%zu), (cols=%zu)}\n",
-				app_name, n_rows, n_cols);
-		return -1;
-	}
-
-	if (map_init(map, n_cols, n_rows) < 0)
-	{
-		dbg_print(stderr, "%s: map_parse: could not init map\n", app_name);
-		return -1;
-	}
-
-	size_t row = 0, col = 0;
-	const char *walk = map_str;
-	char block_char;
-	enum map_block_type block_type;
-
-	while (1) switch ((block_char = *walk++))
+	while (1) switch ((block_char = *map_str++))
 	{
 		case '\0':
-			if (col != n_cols && col != 0)
-			{
-				dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
-						app_name, row + 1, col + 1);
+			if (col != n_cols && col != 0 ||
+					map_find_viborita_head(map, &map->head_row, &map->head_col) < 0 ||
+					map_find_viborita_tail(map, &map->tail_row, &map->tail_col) < 0)
 				return -1;
-			}
+			map->dir = map->map[map->head_row][map->head_col];
 			return 0;
 		case '\n':
 			if (col != n_cols)
-			{
-				dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
-						app_name, row + 1, col + 1);
 				return -1;
-			}
 			col = 0;
 			row += 1;
 			break;
 		default:
 			block_type = MAP_BLOCK_TYPE_FROM_CHAR(block_char);
 			if (col >= n_cols || row >= n_rows || block_type == MAP_BLOCK_INVALID)
-			{
-				dbg_print(stderr, "%s: map_parse: parsing error at {(row=%zu, col=%zu)}\n",
-						app_name, row + 1, col + 1);
 				return -1;
-			}
 
 			map->map[row][col] = block_type;
 			col++;
@@ -145,22 +81,13 @@ int map_parse(struct map *map, const char *map_str)
 
 int map_parse_file(struct map *map, const char *path)
 {
-	if (NULL == map || NULL == path)
-	{
-		dbg_print(stderr, "%s: map_parse_file: invalid arguments "
-				"{(map=%p), (path=%p)}\n",
-				app_name, map, path);
-		return -1;
-	}
-
+	// Helper fn to get file contents.
 	extern int dump_file_cts(const char *, size_t, char *);
+
 	char map_str[(MAX_COLS+1) * MAX_ROWS + 1 /* NUL char */];
+
 	if (dump_file_cts(path, sizeof(map_str), map_str) < 0)
-	{
-		dbg_print(stderr, "%s: map_parse_file: could not open: %s\n",
-				app_name, path);
 		return -1;
-	}
 
 	return map_parse(map, map_str);
 }
@@ -168,23 +95,15 @@ int map_parse_file(struct map *map, const char *path)
 int map_stringify(const struct map *map, size_t max_size, char *str)
 {
 	size_t requested_size = (map->n_rows * (map->n_columns + 1) + 1);
-	if (NULL == map || NULL == str || max_size == 0)
-	{
-		dbg_print(stderr, "%s: map_stringify: invalid arguments "
-				"{(map=%p), (max_size=%zu, requested_size=%zu), (str=%p)}\n",
-				app_name, map, max_size, requested_size, str);
-		return -1;
-	}
 
-	char *walk = str;
-	for (size_t row = 0; row < map->n_rows; ++row, *walk++ = '\n')
-	{
+	if (max_size < requested_size)
+		return -1;
+
+	for (size_t row = 0; row < map->n_rows; ++row, *str++ = '\n')
 		for (size_t col = 0; col < map->n_columns; ++col)
-		{
-			*walk++ = MAP_BLOCK_TYPE_TO_CHAR(map->map[row][col]);
-		}
-	}
-	*walk = '\0';
+				*str++ = MAP_BLOCK_TYPE_TO_CHAR(map->map[row][col]);
+
+	*str = '\0';
 
 	return 0;
 }
@@ -193,12 +112,7 @@ int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **b
 {
 	if (col >= map->n_columns ||
 			row >= map->n_rows)
-	{
-		dbg_print(stderr, "%s: map_get_ref: invalid index "
-				"{(col=%zu), (row=%zu)}\n",
-				app_name, col, row);
 		return -1;
-	}
 
 	*bt = &map->map[row][col];
 	return 0;
@@ -206,82 +120,37 @@ int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **b
 
 int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *bt)
 {
-	if (NULL == map || NULL == bt)
-	{
-		dbg_print(stderr, "%s: map_get: invalid arguments "
-				"{(map=%p), (col=%zu), (row=%zu), (bt=%p)}\n",
-				app_name, map, col, row, bt);
-		return -1;
-	}
-
 	enum map_block_type *block_ref;
 	if (map_get_ref((struct map *)map, col, row, &block_ref) < 0)
-	{
-		dbg_print(stderr, "%s: map_get: map_get_ref failed\n", app_name);
 		return -1;
-	}
 	*bt = *block_ref;
 	return 0;
 }
 
 int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
 {
-	if (NULL == map || MAP_BLOCK_TYPE_TO_CHAR(bt) == '?')
-	{
-		dbg_print(stderr, "%s: set: invalid arguments "
-				"{(map=%p), (col=%zu), (row=%zu), (bt=%lu)}\n",
-				app_name, map, col, row, bt);
-		return -1;
-	}
 	enum map_block_type *block_ref;
 	if (map_get_ref(map, col, row, &block_ref) < 0)
-	{
-		dbg_print(stderr, "%s: map_set: map_get_ref failed\n", app_name);
 		return -1;
-	}
 	*block_ref = bt;
 	return 0;
 }
 
-int map_get_vibora_prev_block(struct map *map, size_t row, size_t col, size_t *prev_row, size_t *prev_col)
+int map_find_viborita_prev_block(struct map *map, size_t row, size_t col,
+		size_t *prev_row, size_t *prev_col)
 {
-	if (col > 0)
-	{
-		*prev_row = row; *prev_col = col - 1;
-		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_RIGHT)
-		{
-			return 0;
-		}
-	}
-	if (col < map->n_columns - 1)
-	{
-		*prev_row = row; *prev_col = col + 1;
-		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_LEFT)
-		{
-			return 0;
-		}
-	}
-	if (row > 0)
-	{
-		*prev_row = row - 1; *prev_col = col;
-		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_DOWN)
-		{
-			return 0;
-		}
-	}
-	if (row < map->n_rows - 1)
-	{
-		*prev_row = row + 1; *prev_col = col;
-		if (map->map[*prev_row][*prev_col] == MAP_BLOCK_VIBORITA_UP)
-		{
-			return 0;
-		}
-	}
-
+	if (col > 0 && map->map[(*prev_row=row)][(*prev_col=col-1)] ==
+			MAP_BLOCK_VIBORITA_RIGHT) return 0;
+	if (col < map->n_columns-1 && map->map[(*prev_row=row)][(*prev_col=col+1)] ==
+			MAP_BLOCK_VIBORITA_LEFT) return 0;
+	if (row > 0 && map->map[(*prev_row=row-1)][(*prev_col=col)] ==
+			MAP_BLOCK_VIBORITA_DOWN) return 0;
+	if (row < map->n_rows-1 && map->map[(*prev_row=row+1)][(*prev_col=col)] ==
+			MAP_BLOCK_VIBORITA_UP) return 0;
 	return -1;
 }
 
-int map_get_vibora_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col)
+int map_find_viborita_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col)
 {
 	int tmp_next_row = (int) row,
 		tmp_next_col = (int) col;
@@ -297,9 +166,7 @@ int map_get_vibora_next_block(struct map *map, size_t row, size_t col, size_t *n
 
 	if (tmp_next_row < 0 || tmp_next_row >= map->n_rows ||
 			tmp_next_col < 0 || tmp_next_col >= map->n_columns)
-	{
 		return -1;
-	}
 
 	*next_row = tmp_next_row;
 	*next_col = tmp_next_col;
@@ -313,14 +180,12 @@ int map_is_head(struct map *map, size_t row, size_t col)
 	size_t next_row, next_col;
 
 	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
-	{
 		return 0;
-	}
-	if (map_get_vibora_next_block(map, row, col, &next_row, &next_col) < 0 ||
+
+	if (map_find_viborita_next_block(map, row, col, &next_row, &next_col) < 0 ||
 			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[next_row][next_col]))
-	{
 		return 1;
-	}
+
 	return 0;
 }
 
@@ -330,14 +195,12 @@ int map_is_tail(struct map *map, size_t row, size_t col)
 	size_t prev_row, prev_col;
 
 	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
-	{
 		return 0;
-	}
-	if (map_get_vibora_prev_block(map, row, col, &prev_row, &prev_col) < 0 ||
+
+	if (map_find_viborita_prev_block(map, row, col, &prev_row, &prev_col) < 0 ||
 			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[prev_row][prev_col]))
-	{
 		return 1;
-	}
+
 	return 0;
 }
 
@@ -362,17 +225,36 @@ int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t), size_t 
 int map_find_viborita_head(struct map *map, size_t *row, size_t *col)
 {
 	if (map_find(map, map_is_head, row, col) <= 0)
-	{
 		return -1;
-	}
-
 	return 0;
 }
 
 int map_find_viborita_tail(struct map *map, size_t *row, size_t *col)
 {
 	if (map_find(map, map_is_tail, row, col) <= 0)
+		return -1;
+	return 0;
+}
+
+int map_set_viborita_direction(struct map *map, enum map_block_type dir)
+{
+	size_t next_head_row, next_head_col;
+	size_t head_row, head_col;
+	size_t prev_head_row, prev_head_col;
+	enum map_block_type head_block;
+
+	head_row = map->head_row;
+	head_col = map->head_col;
+	head_block = map->map[head_row][head_col];
+
+	map_find_viborita_prev_block(map, head_row, head_col, &prev_head_row, &prev_head_col);
+	map->map[head_row][head_col] = dir;
+	map_find_viborita_next_block(map, head_row, head_col, &next_head_row, &next_head_col);
+
+	if (prev_head_row == next_head_row &&
+			prev_head_col == next_head_col)
 	{
+		map->map[head_row][head_col] = head_block;
 		return -1;
 	}
 
@@ -385,23 +267,13 @@ int map_advance(struct map *map, enum map_viborita_state *viborita_state)
 	size_t head_next_row, head_next_col;
 	size_t tail_row, tail_col;
 
-	if (NULL == map)
-	{
-		return -1;
-	}
-
-	if (map_find_viborita_head(map, &head_row, &head_col) < 0)
-	{
-		return -1;
-	}
-
-	if (map_find_viborita_tail(map, &tail_row, &tail_col) < 0)
-	{
-		return -1;
-	}
+	head_row = map->head_row;
+	head_col = map->head_col;
+	tail_row = map->tail_row;
+	tail_col = map->tail_col;
 
 	// Check if the viborita goes outside the map.
-	if (map_get_vibora_next_block(map, head_row, head_col, &head_next_row, &head_next_col) < 0)
+	if (map_find_viborita_next_block(map, head_row, head_col, &head_next_row, &head_next_col) < 0)
 	{
 		*viborita_state = MAP_VIBORITA_DEAD;
 		return 0;
@@ -424,8 +296,12 @@ int map_advance(struct map *map, enum map_viborita_state *viborita_state)
 
 	if (*viborita_state != MAP_VIBORITA_EATING)
 	{
+		map_find_viborita_next_block(map, tail_row, tail_col, &map->tail_row, &map->tail_col);
 		map->map[tail_row][tail_col] = MAP_BLOCK_SPACE;
 	}
+
+	map->head_row = head_next_row;
+	map->head_col = head_next_col;
 
 	return 0;
 }
