@@ -4,6 +4,7 @@
 
 #define MAX_COLS 100
 #define MAX_ROWS 100
+#define MAX_MAP_STR_LEN ((MAX_COLS+1)*MAX_ROWS)
 
 #define MAP_BLOCK_TYPE_IS_VIBORA(bt) \
 	(bt == MAP_BLOCK_VIBORITA_DOWN || \

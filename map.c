@@ -85,7 +85,7 @@ int map_parse_file(struct map *map, const char *path)
 	// Helper fn to get file contents.
 	extern int dump_file_cts(const char *, size_t, char *);
 
-	char map_str[(MAX_COLS+1) * MAX_ROWS + 1 /* NUL char */];
+	char map_str[MAX_MAP_STR_LEN + 1 /* NUL char */];
 
 	if (dump_file_cts(path, sizeof(map_str), map_str) < 0)
 		return -1;

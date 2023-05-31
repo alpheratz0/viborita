@@ -9,7 +9,7 @@ main(int argc, char **argv)
 	int score = 0;
 	struct map map;
 	enum map_viborita_state state;
-	char map_str[2949];
+	char map_str[MAX_MAP_STR_LEN+1];
 	int c;
 
 	if (argc < 2 || map_parse_file(&map, argv[1]) < 0)
