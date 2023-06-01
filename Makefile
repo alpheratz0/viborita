@@ -3,10 +3,13 @@
 
 include config.mk
 
-all: xviborita_ncurses
+all: viborita_ncurses viborita_sdl
 
-xviborita_ncurses: main_ncurses.c map.c util.c
-	$(CC) $(LDFLAGS) -o $@ main_ncurses.c map.c util.c $(LDLIBS)
+viborita_ncurses: main_ncurses.c map.c util.c
+	$(CC) $(LDFLAGS) -o $@ main_ncurses.c map.c util.c $(LDLIBS_NCURSES)
+
+viborita_sdl: main_sdl.c map.c util.c
+	$(CC) $(LDFLAGS) -o $@ main_sdl.c map.c util.c $(LDLIBS_SDL)
 
 clean:
-	rm -f xviborita_ncurses
+	rm -f viborita_ncurses viborita_sdl
