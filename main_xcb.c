@@ -277,6 +277,7 @@ main(int argc, char **argv)
 	create_window();
 	render_map();
 
+	paused = true;
 	while (!should_close) {
 		while (!should_close && (ev = xcb_poll_for_event(conn))) {
 			switch (ev->response_type & ~0x80) {
@@ -295,7 +296,8 @@ main(int argc, char **argv)
 			map_advance(&map, &state);
 			switch (state) {
 			case MAP_VIBORITA_DEAD:
-				should_close = true;
+				map_parse_file(&map, argv[1]);
+				paused = true;
 				break;
 			case MAP_VIBORITA_EATING:
 				map_spawn_food(&map);
