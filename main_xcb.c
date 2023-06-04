@@ -160,17 +160,17 @@ render_map(void)
 	if (block_size < 0)
 		block_size = 2;
 
-	cam_x = map.head_col * block_size - width / 2 - block_size / 2;
-	cam_y = map.head_row * block_size - height / 2 - block_size / 2;
+	cam_x = map.head_col * block_size - width / 2 + block_size / 2;
+	cam_y = map.head_row * block_size - height / 2 + block_size / 2;
 
 	if (cam_x < 0) xcb_clear_area(conn, 0, window, 0, 0, cam_x * -1, height);
 	if (cam_y < 0) xcb_clear_area(conn, 0, window, 0, 0, width, cam_y * -1);
-	if ((map.n_columns - map.head_col) * block_size + block_size / 2 < width / 2) {
-		draw_x_end = width / 2 + (map.n_columns - map.head_col) * block_size + block_size / 2;
+	if ((map.n_columns - map.head_col) * block_size - block_size / 2 < width / 2) {
+		draw_x_end = width / 2 + (map.n_columns - map.head_col) * block_size - block_size / 2;
 		xcb_clear_area(conn, 0, window, draw_x_end, 0, width - draw_x_end, height);
 	}
-	if ((map.n_rows - map.head_row) * block_size + block_size / 2 < height / 2) {
-		draw_y_end = height / 2 + (map.n_rows - map.head_row) * block_size + block_size / 2;
+	if ((map.n_rows - map.head_row) * block_size - block_size / 2 < height / 2) {
+		draw_y_end = height / 2 + (map.n_rows - map.head_row) * block_size - block_size / 2;
 		xcb_clear_area(conn, 0, window, 0, draw_y_end, width, height - draw_y_end);
 	}
 
