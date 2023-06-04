@@ -27,7 +27,7 @@ int
 main(int argc, char **argv)
 {
 	int score = 0, hi_score = 0;
-	struct map map;
+	struct map map, o_map;
 	enum map_snake_state state;
 	char map_str[MAX_MAP_STR_LEN+1];
 	bool paused = false;
@@ -44,6 +44,7 @@ main(int argc, char **argv)
 	nodelay(stdscr, TRUE);
 	curs_set(0);
 	noecho();
+	map_copy(&map, &o_map);
 
 	while (!should_close)
 	{
@@ -70,7 +71,7 @@ main(int argc, char **argv)
 						hi_score = score;
 					break;
 				case MAP_SNAKE_DEAD:
-					map_parse_file(&map, argv[1]);
+					map_copy(&o_map, &map);
 					score = 0;
 					break;
 			}
