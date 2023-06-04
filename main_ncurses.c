@@ -19,14 +19,19 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ncurses.h>
+#include <stdbool.h>
+
+#define PAUSE_MSG "paused"
 
 int
 main(int argc, char **argv)
 {
-	int score = 0;
+	int score = 0, hi_score = 0;
 	struct map map;
 	enum map_snake_state state;
 	char map_str[MAX_MAP_STR_LEN+1];
+	bool paused = false;
+	bool should_close = false;
 	int c;
 
 	if (argc < 2 || map_parse_file(&map, argv[1]) < 0)
@@ -37,34 +42,59 @@ main(int argc, char **argv)
 
 	initscr();
 	nodelay(stdscr, TRUE);
+	curs_set(0);
 	noecho();
 
-	do
+	while (!should_close)
 	{
 		while ((c = getch()) != ERR) switch (c)
 		{
-			case 'h': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT); break;
-			case 'j': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN); break;
-			case 'k': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP); break;
-			case 'l': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
+			case 'h': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT); break;
+			case 'j': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN); break;
+			case 'k': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP); break;
+			case 'l': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
+			case 'p': paused = !paused; break;
+			case 'q': should_close = true; break;
 		}
 
-		map_advance(&map, &state);
-
-		if (state == MAP_SNAKE_EATING)
+		if (!paused)
 		{
-			map_spawn_food(&map);
-			score += 1;
+			map_advance(&map, &state);
+
+			switch (state)
+			{
+				case MAP_SNAKE_EATING:
+					map_spawn_food(&map);
+					score += 1;
+					if (score > hi_score)
+						hi_score = score;
+					break;
+				case MAP_SNAKE_DEAD:
+					map_parse_file(&map, argv[1]);
+					score = 0;
+					break;
+			}
 		}
 
 		map_stringify(&map, sizeof(map_str), map_str);
 		move(0, 0);
 		printw(map_str);
+
+		if (paused)
+		{
+			move(map.n_rows/2, (map.n_columns-sizeof(PAUSE_MSG))/2);
+			printw(PAUSE_MSG);
+		}
+
+		move(map.n_rows, 0);
+		printw("Highest score: %d", hi_score);
+		move(map.n_rows + 1, 0);
+		printw("Score: %d", score);
+
 		refresh();
 
 		usleep(100000);
 	}
-	while (state != MAP_SNAKE_DEAD);
 
 	endwin();
 	printf("viborita score: %d\n", score);
