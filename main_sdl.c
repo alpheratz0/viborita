@@ -64,7 +64,7 @@ static void __sdl_context_create(struct sdl_context *ctx)
 	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1)
 		exit(1);
 
-	ctx->win = SDL_CreateWindow("xviborita", SDL_WINDOWPOS_CENTERED,
+	ctx->win = SDL_CreateWindow("viborita", SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED, 640, 480, 0);
 
 	ctx->renderer = SDL_CreateRenderer(ctx->win, -1,
@@ -210,24 +210,24 @@ static void __render_map(struct sdl_context *ctx, struct map *map, int cz)
 		is_tail = c == map->tail_col && r == map->tail_row;
 		is_head = c == map->head_col && r == map->head_row;
 
-		map_find_viborita_next_block(map, r, c, &nr, &nc);
+		map_find_snake_next_block(map, r, c, &nr, &nc);
 
 		cur = map->map[r][c];
 
 		if (is_tail) switch (cur)
 		{
-			case MAP_BLOCK_VIBORITA_LEFT: text = tail_right; break;
-			case MAP_BLOCK_VIBORITA_RIGHT: text = tail_left; break;
-			case MAP_BLOCK_VIBORITA_UP: text = tail_down; break;
-			case MAP_BLOCK_VIBORITA_DOWN: text = tail_up; break;
+			case MAP_BLOCK_SNAKE_LEFT: text = tail_right; break;
+			case MAP_BLOCK_SNAKE_RIGHT: text = tail_left; break;
+			case MAP_BLOCK_SNAKE_UP: text = tail_down; break;
+			case MAP_BLOCK_SNAKE_DOWN: text = tail_up; break;
 		}
 
 		if (is_head) switch (cur)
 		{
-			case MAP_BLOCK_VIBORITA_LEFT: text = head_left; break;
-			case MAP_BLOCK_VIBORITA_RIGHT: text = head_right; break;
-			case MAP_BLOCK_VIBORITA_UP: text = head_up; break;
-			case MAP_BLOCK_VIBORITA_DOWN: text = head_down; break;
+			case MAP_BLOCK_SNAKE_LEFT: text = head_left; break;
+			case MAP_BLOCK_SNAKE_RIGHT: text = head_right; break;
+			case MAP_BLOCK_SNAKE_UP: text = head_up; break;
+			case MAP_BLOCK_SNAKE_DOWN: text = head_down; break;
 		}
 
 		if (!is_head && !is_tail)
@@ -239,29 +239,29 @@ static void __render_map(struct sdl_context *ctx, struct map *map, int cz)
 			{
 				switch (cur)
 				{
-					case MAP_BLOCK_VIBORITA_DOWN:
-					case MAP_BLOCK_VIBORITA_UP:
+					case MAP_BLOCK_SNAKE_DOWN:
+					case MAP_BLOCK_SNAKE_UP:
 						text = vt_ver;
 						break;
-					case MAP_BLOCK_VIBORITA_LEFT:
-					case MAP_BLOCK_VIBORITA_RIGHT:
+					case MAP_BLOCK_SNAKE_LEFT:
+					case MAP_BLOCK_SNAKE_RIGHT:
 						text = vt_hor;
 						break;
 				}
 			}
 			else
 			{
-				if ((prev == MAP_BLOCK_VIBORITA_RIGHT && cur == MAP_BLOCK_VIBORITA_UP) ||
-						(prev == MAP_BLOCK_VIBORITA_DOWN && cur == MAP_BLOCK_VIBORITA_LEFT))
+				if ((prev == MAP_BLOCK_SNAKE_RIGHT && cur == MAP_BLOCK_SNAKE_UP) ||
+						(prev == MAP_BLOCK_SNAKE_DOWN && cur == MAP_BLOCK_SNAKE_LEFT))
 					text = vt_up_left;
-				else if ((prev == MAP_BLOCK_VIBORITA_RIGHT && cur == MAP_BLOCK_VIBORITA_DOWN) ||
-						(prev == MAP_BLOCK_VIBORITA_UP && cur == MAP_BLOCK_VIBORITA_LEFT))
+				else if ((prev == MAP_BLOCK_SNAKE_RIGHT && cur == MAP_BLOCK_SNAKE_DOWN) ||
+						(prev == MAP_BLOCK_SNAKE_UP && cur == MAP_BLOCK_SNAKE_LEFT))
 					text = vt_down_left;
-				else if ((prev == MAP_BLOCK_VIBORITA_LEFT && cur == MAP_BLOCK_VIBORITA_UP) ||
-						(prev == MAP_BLOCK_VIBORITA_DOWN && cur == MAP_BLOCK_VIBORITA_RIGHT))
+				else if ((prev == MAP_BLOCK_SNAKE_LEFT && cur == MAP_BLOCK_SNAKE_UP) ||
+						(prev == MAP_BLOCK_SNAKE_DOWN && cur == MAP_BLOCK_SNAKE_RIGHT))
 					text = vt_up_right;
-				else if ((prev == MAP_BLOCK_VIBORITA_LEFT && cur == MAP_BLOCK_VIBORITA_DOWN) ||
-						(prev == MAP_BLOCK_VIBORITA_UP && cur == MAP_BLOCK_VIBORITA_RIGHT))
+				else if ((prev == MAP_BLOCK_SNAKE_LEFT && cur == MAP_BLOCK_SNAKE_DOWN) ||
+						(prev == MAP_BLOCK_SNAKE_UP && cur == MAP_BLOCK_SNAKE_RIGHT))
 					text = vt_down_right;
 			}
 		}
@@ -290,7 +290,7 @@ main(int argc, char **argv)
 	int score = 0;
 	struct map map;
 	struct sdl_context sdl_context;
-	enum map_viborita_state state;
+	enum map_snake_state state;
 	int c;
 	SDL_Event event;
 
@@ -309,10 +309,10 @@ main(int argc, char **argv)
 				case SDL_KEYDOWN:
 					switch (event.key.keysym.sym)
 					{
-						case SDLK_h: map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_LEFT);  break;
-						case SDLK_j: map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_DOWN);  break;
-						case SDLK_k: map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_UP);    break;
-						case SDLK_l: map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_RIGHT); break;
+						case SDLK_h: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT);  break;
+						case SDLK_j: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN);  break;
+						case SDLK_k: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP);    break;
+						case SDLK_l: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
 					}
 					break;
 			}
@@ -322,12 +322,12 @@ main(int argc, char **argv)
 
 		switch (state)
 		{
-			case MAP_VIBORITA_EATING:
+			case MAP_SNAKE_EATING:
 				__sdl_context_play_sound(&sdl_context, __sdl_context_load_sound(&sdl_context, "./sfx/chomp.wav"));
 				map_spawn_food(&map);
 				score += 1;
 				break;
-			case MAP_VIBORITA_DEAD:
+			case MAP_SNAKE_DEAD:
 				__sdl_context_play_sound(&sdl_context, __sdl_context_load_sound(&sdl_context, "./sfx/death.wav"));
 				score = 0;
 				map_parse_file(&map, argv[1]);

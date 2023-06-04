@@ -25,7 +25,7 @@ main(int argc, char **argv)
 {
 	int score = 0;
 	struct map map;
-	enum map_viborita_state state;
+	enum map_snake_state state;
 	char map_str[MAX_MAP_STR_LEN+1];
 	int c;
 
@@ -43,15 +43,15 @@ main(int argc, char **argv)
 	{
 		while ((c = getch()) != ERR) switch (c)
 		{
-			case 'h': map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_LEFT); break;
-			case 'j': map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_DOWN); break;
-			case 'k': map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_UP); break;
-			case 'l': map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_RIGHT); break;
+			case 'h': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT); break;
+			case 'j': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN); break;
+			case 'k': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP); break;
+			case 'l': map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
 		}
 
 		map_advance(&map, &state);
 
-		if (state == MAP_VIBORITA_EATING)
+		if (state == MAP_SNAKE_EATING)
 		{
 			map_spawn_food(&map);
 			score += 1;
@@ -64,10 +64,10 @@ main(int argc, char **argv)
 
 		usleep(100000);
 	}
-	while (state != MAP_VIBORITA_DEAD);
+	while (state != MAP_SNAKE_DEAD);
 
 	endwin();
-	printf("xviborita score: %d\n", score);
+	printf("viborita score: %d\n", score);
 
 	return 0;
 }

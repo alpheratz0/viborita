@@ -35,7 +35,7 @@ static xcb_window_t window;
 static xcb_gcontext_t gc_space_1, gc_space_2;
 static xcb_gcontext_t gc_food;
 static xcb_gcontext_t gc_wall;
-static xcb_gcontext_t gc_viborita;
+static xcb_gcontext_t gc_snake;
 static xcb_key_symbols_t *ksyms;
 static uint32_t width, height;
 static int zoom;
@@ -114,7 +114,7 @@ create_window(void)
 	gc_wall = xcolor(0xffffff);
 	gc_space_1 = xcolor(0x000000);
 	gc_space_2 = xcolor(0x090909);
-	gc_viborita = xcolor(0xc4f669);
+	gc_snake = xcolor(0xc4f669);
 
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
@@ -144,7 +144,7 @@ destroy_window(void)
 	xcb_free_gc(conn, gc_space_1);
 	xcb_free_gc(conn, gc_space_2);
 	xcb_free_gc(conn, gc_food);
-	xcb_free_gc(conn, gc_viborita);
+	xcb_free_gc(conn, gc_snake);
 	xcb_key_symbols_free(ksyms);
 	xcb_disconnect(conn);
 }
@@ -186,11 +186,11 @@ render_map(void)
 		case MAP_BLOCK_WALL:
 			gc = gc_wall;
 			break;
-		case MAP_BLOCK_VIBORITA_UP:
-		case MAP_BLOCK_VIBORITA_LEFT:
-		case MAP_BLOCK_VIBORITA_RIGHT:
-		case MAP_BLOCK_VIBORITA_DOWN:
-			gc = gc_viborita;
+		case MAP_BLOCK_SNAKE_UP:
+		case MAP_BLOCK_SNAKE_LEFT:
+		case MAP_BLOCK_SNAKE_RIGHT:
+		case MAP_BLOCK_SNAKE_DOWN:
+			gc = gc_snake;
 			break;
 		}
 
@@ -228,10 +228,10 @@ h_key_press(xcb_key_press_event_t *ev)
 	key = xcb_key_symbols_get_keysym(ksyms, ev->detail, 0);
 
 	switch (key) {
-	case XKB_KEY_h: paused = false; map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_LEFT); break;
-	case XKB_KEY_j: paused = false; map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_DOWN); break;
-	case XKB_KEY_k: paused = false; map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_UP); break;
-	case XKB_KEY_l: paused = false; map_set_viborita_direction(&map, MAP_BLOCK_VIBORITA_RIGHT); break;
+	case XKB_KEY_h: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT); break;
+	case XKB_KEY_j: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN); break;
+	case XKB_KEY_k: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP); break;
+	case XKB_KEY_l: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
 	case XKB_KEY_space: paused = !paused;
 	}
 }
@@ -266,7 +266,7 @@ int
 main(int argc, char **argv)
 {
 	xcb_generic_event_t *ev;
-	enum map_viborita_state state;
+	enum map_snake_state state;
 
 	/* seed rand with the current process id */
 	srand((unsigned int)(getpid()));
@@ -295,11 +295,11 @@ main(int argc, char **argv)
 		if (!paused) {
 			map_advance(&map, &state);
 			switch (state) {
-			case MAP_VIBORITA_DEAD:
+			case MAP_SNAKE_DEAD:
 				map_parse_file(&map, argv[1]);
 				paused = true;
 				break;
-			case MAP_VIBORITA_EATING:
+			case MAP_SNAKE_EATING:
 				map_spawn_food(&map);
 				break;
 			}

@@ -56,8 +56,8 @@ int map_parse(struct map *map, const char *map_str)
 	{
 		case '\0':
 			if (col != n_cols && col != 0 ||
-					map_find_viborita_head(map, &map->head_row, &map->head_col) < 0 ||
-					map_find_viborita_tail(map, &map->tail_row, &map->tail_col) < 0)
+					map_find_snake_head(map, &map->head_row, &map->head_col) < 0 ||
+					map_find_snake_tail(map, &map->tail_row, &map->tail_col) < 0)
 				return -1;
 			map->dir = map->map[map->head_row][map->head_col];
 			return 0;
@@ -137,31 +137,31 @@ int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
 	return 0;
 }
 
-int map_find_viborita_prev_block(struct map *map, size_t row, size_t col,
+int map_find_snake_prev_block(struct map *map, size_t row, size_t col,
 		size_t *prev_row, size_t *prev_col)
 {
 	if (col > 0 && map->map[(*prev_row=row)][(*prev_col=col-1)] ==
-			MAP_BLOCK_VIBORITA_RIGHT) return 0;
+			MAP_BLOCK_SNAKE_RIGHT) return 0;
 	if (col < map->n_columns-1 && map->map[(*prev_row=row)][(*prev_col=col+1)] ==
-			MAP_BLOCK_VIBORITA_LEFT) return 0;
+			MAP_BLOCK_SNAKE_LEFT) return 0;
 	if (row > 0 && map->map[(*prev_row=row-1)][(*prev_col=col)] ==
-			MAP_BLOCK_VIBORITA_DOWN) return 0;
+			MAP_BLOCK_SNAKE_DOWN) return 0;
 	if (row < map->n_rows-1 && map->map[(*prev_row=row+1)][(*prev_col=col)] ==
-			MAP_BLOCK_VIBORITA_UP) return 0;
+			MAP_BLOCK_SNAKE_UP) return 0;
 	return -1;
 }
 
-int map_find_viborita_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col)
+int map_find_snake_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col)
 {
 	int tmp_next_row = (int) row,
 		tmp_next_col = (int) col;
 
 	switch (map->map[row][col])
 	{
-		case MAP_BLOCK_VIBORITA_UP:    tmp_next_row -= 1; break;
-		case MAP_BLOCK_VIBORITA_DOWN:  tmp_next_row += 1; break;
-		case MAP_BLOCK_VIBORITA_LEFT:  tmp_next_col -= 1; break;
-		case MAP_BLOCK_VIBORITA_RIGHT: tmp_next_col += 1; break;
+		case MAP_BLOCK_SNAKE_UP:    tmp_next_row -= 1; break;
+		case MAP_BLOCK_SNAKE_DOWN:  tmp_next_row += 1; break;
+		case MAP_BLOCK_SNAKE_LEFT:  tmp_next_col -= 1; break;
+		case MAP_BLOCK_SNAKE_RIGHT: tmp_next_col += 1; break;
 		default: return -1;
 	}
 
@@ -183,7 +183,7 @@ int map_is_head(struct map *map, size_t row, size_t col)
 	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
 		return 0;
 
-	if (map_find_viborita_next_block(map, row, col, &next_row, &next_col) < 0 ||
+	if (map_find_snake_next_block(map, row, col, &next_row, &next_col) < 0 ||
 			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[next_row][next_col]))
 		return 1;
 
@@ -198,7 +198,7 @@ int map_is_tail(struct map *map, size_t row, size_t col)
 	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
 		return 0;
 
-	if (map_find_viborita_prev_block(map, row, col, &prev_row, &prev_col) < 0 ||
+	if (map_find_snake_prev_block(map, row, col, &prev_row, &prev_col) < 0 ||
 			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[prev_row][prev_col]))
 		return 1;
 
@@ -223,21 +223,21 @@ int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t), size_t 
 	return 0;
 }
 
-int map_find_viborita_head(struct map *map, size_t *row, size_t *col)
+int map_find_snake_head(struct map *map, size_t *row, size_t *col)
 {
 	if (map_find(map, map_is_head, row, col) <= 0)
 		return -1;
 	return 0;
 }
 
-int map_find_viborita_tail(struct map *map, size_t *row, size_t *col)
+int map_find_snake_tail(struct map *map, size_t *row, size_t *col)
 {
 	if (map_find(map, map_is_tail, row, col) <= 0)
 		return -1;
 	return 0;
 }
 
-int map_set_viborita_direction(struct map *map, enum map_block_type dir)
+int map_set_snake_direction(struct map *map, enum map_block_type dir)
 {
 	size_t next_head_row, next_head_col;
 	size_t head_row, head_col;
@@ -248,9 +248,9 @@ int map_set_viborita_direction(struct map *map, enum map_block_type dir)
 	head_col = map->head_col;
 	head_block = map->map[head_row][head_col];
 
-	map_find_viborita_prev_block(map, head_row, head_col, &prev_head_row, &prev_head_col);
+	map_find_snake_prev_block(map, head_row, head_col, &prev_head_row, &prev_head_col);
 	map->map[head_row][head_col] = dir;
-	map_find_viborita_next_block(map, head_row, head_col, &next_head_row, &next_head_col);
+	map_find_snake_next_block(map, head_row, head_col, &next_head_row, &next_head_col);
 
 	if (prev_head_row == next_head_row &&
 			prev_head_col == next_head_col)
@@ -262,7 +262,7 @@ int map_set_viborita_direction(struct map *map, enum map_block_type dir)
 	return 0;
 }
 
-int map_advance(struct map *map, enum map_viborita_state *viborita_state)
+int map_advance(struct map *map, enum map_snake_state *snake_state)
 {
 	size_t head_row, head_col;
 	size_t head_next_row, head_next_col;
@@ -273,10 +273,10 @@ int map_advance(struct map *map, enum map_viborita_state *viborita_state)
 	tail_row = map->tail_row;
 	tail_col = map->tail_col;
 
-	// Check if the viborita goes outside the map.
-	if (map_find_viborita_next_block(map, head_row, head_col, &head_next_row, &head_next_col) < 0)
+	// Check if the snake goes outside the map.
+	if (map_find_snake_next_block(map, head_row, head_col, &head_next_row, &head_next_col) < 0)
 	{
-		*viborita_state = MAP_VIBORITA_DEAD;
+		*snake_state = MAP_SNAKE_DEAD;
 		return 0;
 	}
 
@@ -284,20 +284,20 @@ int map_advance(struct map *map, enum map_viborita_state *viborita_state)
 	{
 		case MAP_BLOCK_SPACE:
 			map->map[head_next_row][head_next_col] = map->map[head_row][head_col];
-			*viborita_state = MAP_VIBORITA_IDLE;
+			*snake_state = MAP_SNAKE_IDLE;
 			break;
 		case MAP_BLOCK_FOOD:
 			map->map[head_next_row][head_next_col] = map->map[head_row][head_col];
-			*viborita_state = MAP_VIBORITA_EATING;
+			*snake_state = MAP_SNAKE_EATING;
 			break;
 		default:
-			*viborita_state = MAP_VIBORITA_DEAD;
+			*snake_state = MAP_SNAKE_DEAD;
 			return 0;
 	}
 
-	if (*viborita_state != MAP_VIBORITA_EATING)
+	if (*snake_state != MAP_SNAKE_EATING)
 	{
-		map_find_viborita_next_block(map, tail_row, tail_col, &map->tail_row, &map->tail_col);
+		map_find_snake_next_block(map, tail_row, tail_col, &map->tail_row, &map->tail_col);
 		map->map[tail_row][tail_col] = MAP_BLOCK_SPACE;
 	}
 
