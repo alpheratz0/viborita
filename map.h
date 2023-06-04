@@ -23,14 +23,13 @@
 		            MAP_BLOCK_INVALID)
 
 #define MAP_BLOCK_TYPE_TO_CHAR(bt) \
-	(bt == MAP_BLOCK_SPACE             ? ' ' : \
-		bt == MAP_BLOCK_WALL           ? '=' : \
-		bt == MAP_BLOCK_FOOD           ? '*' : \
-		bt == MAP_BLOCK_SNAKE_UP    ? '^' : \
-		bt == MAP_BLOCK_SNAKE_LEFT  ? '<' : \
-		bt == MAP_BLOCK_SNAKE_DOWN  ? 'v' : \
-		bt == MAP_BLOCK_SNAKE_RIGHT ? '>' : \
-		                                 '?')
+	(bt == MAP_BLOCK_SPACE ? ' ' : \
+		bt == MAP_BLOCK_WALL ? '=' : \
+		bt == MAP_BLOCK_FOOD ? '*' : \
+		bt == MAP_BLOCK_SNAKE_UP ? '^' : \
+		bt == MAP_BLOCK_SNAKE_LEFT ? '<' : \
+		bt == MAP_BLOCK_SNAKE_DOWN ? 'v' : \
+		bt == MAP_BLOCK_SNAKE_RIGHT ? '>' : '?')
 
 #define MAP_FOR_EACH_BLOCK(m, row, col, block) \
 	for (size_t row = 0, col = 0; row < (m)->n_rows; ++row, col = 0) \
