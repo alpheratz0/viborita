@@ -6,7 +6,7 @@
 #define MAX_ROWS 100
 #define MAX_MAP_STR_LEN ((MAX_COLS+1)*MAX_ROWS)
 
-#define MAP_BLOCK_TYPE_IS_VIBORA(bt) \
+#define MAP_BLOCK_TYPE_IS_SNAKE(bt) \
 	(bt == MAP_BLOCK_SNAKE_DOWN || \
 		bt == MAP_BLOCK_SNAKE_LEFT || \
 		bt == MAP_BLOCK_SNAKE_RIGHT || \

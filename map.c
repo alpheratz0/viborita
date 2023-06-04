@@ -180,11 +180,11 @@ int map_is_head(struct map *map, size_t row, size_t col)
 	enum map_block_type block = map->map[row][col];
 	size_t next_row, next_col;
 
-	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
+	if (!MAP_BLOCK_TYPE_IS_SNAKE(block))
 		return 0;
 
 	if (map_find_snake_next_block(map, row, col, &next_row, &next_col) < 0 ||
-			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[next_row][next_col]))
+			!MAP_BLOCK_TYPE_IS_SNAKE(map->map[next_row][next_col]))
 		return 1;
 
 	return 0;
@@ -195,11 +195,11 @@ int map_is_tail(struct map *map, size_t row, size_t col)
 	enum map_block_type block = map->map[row][col];
 	size_t prev_row, prev_col;
 
-	if (!MAP_BLOCK_TYPE_IS_VIBORA(block))
+	if (!MAP_BLOCK_TYPE_IS_SNAKE(block))
 		return 0;
 
 	if (map_find_snake_prev_block(map, row, col, &prev_row, &prev_col) < 0 ||
-			!MAP_BLOCK_TYPE_IS_VIBORA(map->map[prev_row][prev_col]))
+			!MAP_BLOCK_TYPE_IS_SNAKE(map->map[prev_row][prev_col]))
 		return 1;
 
 	return 0;
