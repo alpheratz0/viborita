@@ -75,7 +75,7 @@ static void __sdl_context_create(struct sdl_context *ctx)
 
 static void __sdl_context_begin_draw(struct sdl_context *ctx)
 {
-	SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 255);
+	SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255);
 	SDL_RenderClear(ctx->renderer);
 }
 
@@ -170,6 +170,14 @@ static void __sdl_context_delay(const struct sdl_context *ctx, int ms)
 
 static void __render_map(struct sdl_context *ctx, struct map *map, int cz)
 {
+	int cam_x, cam_y;
+	int ww, wh;
+
+	__sdl_context_query_window_size(ctx, &ww, &wh);
+
+	cam_x = map->head_col * cz - ww / 2 + cz / 2;
+	cam_y = map->head_row * cz - wh / 2 + cz / 2;
+
 	int food_texture = __sdl_context_load_texture(ctx, "./gfx/apple.png");
 
 	int vt_down_left = __sdl_context_load_texture(ctx, "./gfx/body_bottomleft.png");
@@ -189,10 +197,10 @@ static void __render_map(struct sdl_context *ctx, struct map *map, int cz)
 	int head_down = __sdl_context_load_texture(ctx, "./gfx/head_down.png");
 	int head_up = __sdl_context_load_texture(ctx, "./gfx/head_up.png");
 
-	uint32_t bg_colors[2] = {0xa6d13c, 0xadd644};
+	uint32_t bg_colors[2] = {0x000000, 0x090909};
 	for (size_t x = 0; x < map->n_columns; ++x)
 		for (size_t y = 0; y < map->n_rows; ++y)
-			__sdl_context_render_rect(ctx, x*cz, y*cz, cz, cz, bg_colors[(x+y)%2]);
+			__sdl_context_render_rect(ctx, x*cz-cam_x, y*cz-cam_y, cz, cz, bg_colors[(x+y)%2]);
 
 	size_t pr, pc;
 	size_t r, c;
@@ -267,7 +275,7 @@ static void __render_map(struct sdl_context *ctx, struct map *map, int cz)
 		}
 
 		if (text != -1)
-			__sdl_context_render_texture(ctx, text, c * cz, r * cz, cz, cz);
+			__sdl_context_render_texture(ctx, text, c * cz - cam_x, r * cz - cam_y, cz, cz);
 
 		pr = r; pc = c;
 		c = nc; r = nr;
@@ -278,8 +286,8 @@ static void __render_map(struct sdl_context *ctx, struct map *map, int cz)
 	{
 		switch (block)
 		{
-			case MAP_BLOCK_FOOD: __sdl_context_render_texture(ctx, food_texture, col * cz, row * cz, cz, cz); break;
-			case MAP_BLOCK_WALL: __sdl_context_render_rect(ctx, col*cz, row*cz, cz, cz, 0x349eeb); break;
+			case MAP_BLOCK_FOOD: __sdl_context_render_texture(ctx, food_texture, col * cz - cam_x, row * cz - cam_y, cz, cz); break;
+			case MAP_BLOCK_WALL: __sdl_context_render_rect(ctx, col*cz - cam_x, row*cz-cam_y, cz, cz, 0x349eeb); break;
 		}
 	}
 }
@@ -338,7 +346,7 @@ main(int argc, char **argv)
 		__sdl_context_begin_draw(&sdl_context);
 		__render_map(&sdl_context, &map, 40);
 		__sdl_context_end_draw(&sdl_context);
-		__sdl_context_delay(&sdl_context, 75);
+		__sdl_context_delay(&sdl_context, 50);
 	}
 
 	__sdl_context_destroy(&sdl_context);
