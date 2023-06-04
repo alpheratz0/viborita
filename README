@@ -1,4 +1,18 @@
-snake game.
+Classic snake game.
+
+             ____
+            / . .\
+MT          \  ---<
+             \  /
+   __________/ /
+-=:___________/
+
+Assets taken from:
+
+ * https://opengameart.org/content/snake-game-assets
+ * https://www.partnersinrhyme.com/soundfx/human_sounds/human_aud-chomp_wav.shtml
+ * https://opengameart.org/content/8-wet-squish-slurp-impacts
+ * https://opengameart.org/content/library-of-game-sounds
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License
