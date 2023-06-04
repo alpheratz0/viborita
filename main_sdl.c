@@ -38,11 +38,11 @@ struct sdl_context {
 
 static void __sdl_context_destroy(struct sdl_context *ctx)
 {
-    SDL_DestroyRenderer(ctx->renderer);
-    SDL_DestroyWindow(ctx->win);
+	SDL_DestroyRenderer(ctx->renderer);
+	SDL_DestroyWindow(ctx->win);
 
-    IMG_Quit();
-    SDL_Quit();
+	IMG_Quit();
+	SDL_Quit();
 }
 
 static void __sdl_context_query_window_size(struct sdl_context *ctx,
@@ -54,20 +54,20 @@ static void __sdl_context_query_window_size(struct sdl_context *ctx,
 static void __sdl_context_create(struct sdl_context *ctx)
 {
 	// Init video and audio subsystems.
-    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0)
 		exit(1);
 
 	// Initialize image loader to accept png images.
-    if (IMG_Init(IMG_INIT_PNG) < 0)
+	if (IMG_Init(IMG_INIT_PNG) < 0)
 		exit(1);
 
-	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1) 
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1)
 		exit(1);
 
 	ctx->win = SDL_CreateWindow("xviborita", SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED, 640, 480, 0);
 
-    ctx->renderer = SDL_CreateRenderer(ctx->win, -1,
+	ctx->renderer = SDL_CreateRenderer(ctx->win, -1,
 			SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	ctx->n_sounds = ctx->n_textures = 0;
@@ -301,7 +301,7 @@ main(int argc, char **argv)
 
 	while (1)
 	{
-        while (SDL_PollEvent(&event))
+		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
 			{
@@ -316,7 +316,7 @@ main(int argc, char **argv)
 					}
 					break;
 			}
-        }
+		}
 
 		map_advance(&map, &state);
 
@@ -339,9 +339,9 @@ main(int argc, char **argv)
 		__render_map(&sdl_context, &map, 40);
 		__sdl_context_end_draw(&sdl_context);
 		__sdl_context_delay(&sdl_context, 75);
-    }
+	}
 
 	__sdl_context_destroy(&sdl_context);
 
-    return 0;
+	return 0;
 }
