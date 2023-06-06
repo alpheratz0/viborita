@@ -1,13 +1,14 @@
 /*
 	Copyright (C) 2023 <alpheratz99@protonmail.com>
 
-	This program is free software; you can redistribute it and/or modify it under
-	the terms of the GNU General Public License version 2 as published by the
-	Free Software Foundation.
+	This program is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License version 2 as published by
+	the Free Software Foundation.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY
-	WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-	FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful, but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+	more details.
 
 	You should have received a copy of the GNU General Public License along with
 	this program; if not, write to the Free Software Foundation, Inc., 59 Temple
@@ -32,7 +33,7 @@ static struct map map;
 static xcb_connection_t *conn;
 static xcb_screen_t *screen;
 static xcb_window_t window;
-static xcb_gcontext_t gc_space_1, gc_space_2;
+static xcb_gcontext_t gc_space[2];
 static xcb_gcontext_t gc_food;
 static xcb_gcontext_t gc_wall;
 static xcb_gcontext_t gc_snake;
@@ -112,8 +113,8 @@ create_window(void)
 
 	gc_food = xcolor(0xc10b26);
 	gc_wall = xcolor(0xffffff);
-	gc_space_1 = xcolor(0x000000);
-	gc_space_2 = xcolor(0x090909);
+	gc_space[0] = xcolor(0x000000);
+	gc_space[1] = xcolor(0x090909);
 	gc_snake = xcolor(0xc4f669);
 
 	xcb_change_property(
@@ -141,8 +142,8 @@ static void
 destroy_window(void)
 {
 	xcb_free_gc(conn, gc_wall);
-	xcb_free_gc(conn, gc_space_1);
-	xcb_free_gc(conn, gc_space_2);
+	xcb_free_gc(conn, gc_space[0]);
+	xcb_free_gc(conn, gc_space[1]);
 	xcb_free_gc(conn, gc_food);
 	xcb_free_gc(conn, gc_snake);
 	xcb_key_symbols_free(ksyms);
@@ -152,33 +153,30 @@ destroy_window(void)
 static void
 render_map(void)
 {
-	int block_size = 20 + zoom;
-	int draw_x_end, draw_y_end;
-	int cam_x, cam_y;
+	int block_size;
+	int map_x1, map_x2;
+	int map_y1, map_y2;
 	xcb_gcontext_t gc;
 
-	if (block_size < 0)
-		block_size = 2;
+	block_size = 20 + (zoom < -18 ? -18 : zoom);
+	map_x1 = -((map.head_col * block_size) -  (width - block_size) / 2);
+	map_y1 = -((map.head_row * block_size) - (height - block_size) / 2);
+	map_x2 = map_x1 + map.n_cols * block_size;
+	map_y2 = map_y1 + map.n_rows * block_size;
 
-	cam_x = map.head_col * block_size - width / 2 + block_size / 2;
-	cam_y = map.head_row * block_size - height / 2 + block_size / 2;
-
-	if (cam_x < 0) xcb_clear_area(conn, 0, window, 0, 0, cam_x * -1, height);
-	if (cam_y < 0) xcb_clear_area(conn, 0, window, 0, 0, width, cam_y * -1);
-	if ((map.n_columns - map.head_col) * block_size - block_size / 2 < width / 2) {
-		draw_x_end = width / 2 + (map.n_columns - map.head_col) * block_size - block_size / 2;
-		xcb_clear_area(conn, 0, window, draw_x_end, 0, width - draw_x_end, height);
-	}
-	if ((map.n_rows - map.head_row) * block_size - block_size / 2 < height / 2) {
-		draw_y_end = height / 2 + (map.n_rows - map.head_row) * block_size - block_size / 2;
-		xcb_clear_area(conn, 0, window, 0, draw_y_end, width, height - draw_y_end);
-	}
+	if (map_x1 > 0)
+		xcb_clear_area(conn, 0, window, 0, 0, map_x1, height);
+	if (map_y1 > 0)
+		xcb_clear_area(conn, 0, window, 0, 0, width, map_y1);
+	if (map_x2 < width)
+		xcb_clear_area(conn, 0, window, map_x2, 0, width - map_x2, height);
+	if (map_y2 < height)
+		xcb_clear_area(conn, 0, window, 0, map_y2, width, height - map_y2);
 
 	MAP_FOR_EACH_BLOCK(&map, row, col, block) {
 		switch (block) {
 		case MAP_BLOCK_SPACE:
-			if ((row+col)%2==0) gc = gc_space_1;
-			else gc = gc_space_2;
+			gc = gc_space[(row + col) % 2];
 			break;
 		case MAP_BLOCK_FOOD:
 			gc = gc_food;
@@ -194,12 +192,18 @@ render_map(void)
 			break;
 		}
 
-		xcb_poly_fill_rectangle(conn, window, gc, 1, &(const xcb_rectangle_t) {
-				.x = col * block_size - cam_x,
-				.y = row * block_size - cam_y,
+		xcb_poly_fill_rectangle(
+			conn,
+			window,
+			gc,
+			1,
+			&(const xcb_rectangle_t) {
+				.x = map_x1 + col * block_size,
+				.y = map_y1 + row * block_size,
 				.width = block_size,
 				.height = block_size
-				});
+			}
+		);
 	}
 
 	xcb_flush(conn);
@@ -224,15 +228,22 @@ static void
 h_key_press(xcb_key_press_event_t *ev)
 {
 	xcb_keysym_t key;
-
+	enum map_block_type dir;
+   
 	key = xcb_key_symbols_get_keysym(ksyms, ev->detail, 0);
+	dir = MAP_BLOCK_INVALID;
 
 	switch (key) {
-	case XKB_KEY_h: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT); break;
-	case XKB_KEY_j: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN); break;
-	case XKB_KEY_k: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP); break;
-	case XKB_KEY_l: paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
-	case XKB_KEY_space: paused = !paused;
+	case XKB_KEY_h: dir = MAP_BLOCK_SNAKE_LEFT; break;
+	case XKB_KEY_j: dir = MAP_BLOCK_SNAKE_DOWN; break;
+	case XKB_KEY_k: dir = MAP_BLOCK_SNAKE_UP; break;
+	case XKB_KEY_l: dir = MAP_BLOCK_SNAKE_RIGHT; break;
+	case XKB_KEY_space: paused = !paused; break;
+	}
+
+	if (dir != MAP_BLOCK_INVALID) {
+		paused = false;
+		map_set_snake_direction(&map, dir);
 	}
 }
 
@@ -281,12 +292,12 @@ main(int argc, char **argv)
 	while (!should_close) {
 		while (!should_close && (ev = xcb_poll_for_event(conn))) {
 			switch (ev->response_type & ~0x80) {
-			case XCB_CLIENT_MESSAGE:     h_client_message((void *)(ev)); break;
-			case XCB_EXPOSE:             h_expose((void *)(ev)); break;
-			case XCB_KEY_PRESS:          h_key_press((void *)(ev)); break;
-			case XCB_BUTTON_PRESS:       h_button_press((void *)(ev)); break;
-			case XCB_CONFIGURE_NOTIFY:   h_configure_notify((void *)(ev)); break;
-			case XCB_MAPPING_NOTIFY:     h_mapping_notify((void *)(ev)); break;
+			case XCB_CLIENT_MESSAGE:    h_client_message((void *)(ev)); break;
+			case XCB_EXPOSE:            h_expose((void *)(ev)); break;
+			case XCB_KEY_PRESS:         h_key_press((void *)(ev)); break;
+			case XCB_BUTTON_PRESS:      h_button_press((void *)(ev)); break;
+			case XCB_CONFIGURE_NOTIFY:  h_configure_notify((void *)(ev)); break;
+			case XCB_MAPPING_NOTIFY:    h_mapping_notify((void *)(ev)); break;
 			}
 
 			free(ev);
