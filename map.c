@@ -1,3 +1,21 @@
+/*
+	Copyright (C) 2023 <alpheratz99@protonmail.com>
+
+	This program is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License version 2 as published by
+	the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful, but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+	more details.
+
+	You should have received a copy of the GNU General Public License along with
+	this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+	Place, Suite 330, Boston, MA 02111-1307 USA
+
+*/
+
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -49,16 +67,18 @@ int map_parse(struct map *map, const char *map_str)
 
 	memset(map->map, 0, sizeof(map->map));
 
-	map->n_columns = n_cols;
+	map->n_cols = n_cols;
 	map->n_rows = n_rows;
 
 	while (1) switch ((block_char = *map_str++))
 	{
 		case '\0':
 			if (col != n_cols && col != 0 ||
-					map_find_snake_head(map, &map->head_row, &map->head_col) < 0 ||
-					map_find_snake_tail(map, &map->tail_row, &map->tail_col) < 0)
+				map_find_snake_head(map, &map->head_row, &map->head_col) < 0 ||
+				map_find_snake_tail(map, &map->tail_row, &map->tail_col) < 0)
+			{
 				return -1;
+			}
 			map->dir = map->map[map->head_row][map->head_col];
 			return 0;
 		case '\n':
@@ -69,8 +89,11 @@ int map_parse(struct map *map, const char *map_str)
 			break;
 		default:
 			block_type = MAP_BLOCK_TYPE_FROM_CHAR(block_char);
-			if (col >= n_cols || row >= n_rows || block_type == MAP_BLOCK_INVALID)
+			if (col >= n_cols || row >= n_rows ||
+					block_type == MAP_BLOCK_INVALID)
+			{
 				return -1;
+			}
 
 			map->map[row][col] = block_type;
 			col++;
@@ -95,13 +118,13 @@ int map_parse_file(struct map *map, const char *path)
 
 int map_stringify(const struct map *map, size_t max_size, char *str)
 {
-	size_t requested_size = (map->n_rows * (map->n_columns + 1) + 1);
+	size_t requested_size = (map->n_rows * (map->n_cols + 1) + 1);
 
 	if (max_size < requested_size)
 		return -1;
 
 	for (size_t row = 0; row < map->n_rows; ++row, *str++ = '\n')
-		for (size_t col = 0; col < map->n_columns; ++col)
+		for (size_t col = 0; col < map->n_cols; ++col)
 				*str++ = MAP_BLOCK_TYPE_TO_CHAR(map->map[row][col]);
 
 	*str = '\0';
@@ -109,49 +132,49 @@ int map_stringify(const struct map *map, size_t max_size, char *str)
 	return 0;
 }
 
-int map_get_ref(struct map *map, size_t col, size_t row, enum map_block_type **bt)
+int map_contains(const struct map *map, size_t row, size_t col)
 {
-	if (col >= map->n_columns ||
-			row >= map->n_rows)
-		return -1;
+	if (row >= map->n_rows ||
+			col >= map->n_cols)
+		return 0;
+	return 1;
+}
 
-	*bt = &map->map[row][col];
+int map_get(const struct map *map, size_t row, size_t col,
+		enum map_block_type *bt)
+{
+	if (!map_contains(map, row, col))
+		return 0;
+	*bt = map->map[row][col];
 	return 0;
 }
 
-int map_get(const struct map *map, size_t col, size_t row, enum map_block_type *bt)
+int map_set(struct map *map, size_t row, size_t col, enum map_block_type bt)
 {
-	enum map_block_type *block_ref;
-	if (map_get_ref((struct map *)map, col, row, &block_ref) < 0)
-		return -1;
-	*bt = *block_ref;
-	return 0;
-}
-
-int map_set(struct map *map, size_t col, size_t row, enum map_block_type bt)
-{
-	enum map_block_type *block_ref;
-	if (map_get_ref(map, col, row, &block_ref) < 0)
-		return -1;
-	*block_ref = bt;
+	if (!map_contains(map, row, col))
+		return 0;
+	map->map[row][col] = bt;
 	return 0;
 }
 
 int map_find_snake_prev_block(struct map *map, size_t row, size_t col,
 		size_t *prev_row, size_t *prev_col)
 {
-	if (col > 0 && map->map[(*prev_row=row)][(*prev_col=col-1)] ==
-			MAP_BLOCK_SNAKE_RIGHT) return 0;
-	if (col < map->n_columns-1 && map->map[(*prev_row=row)][(*prev_col=col+1)] ==
-			MAP_BLOCK_SNAKE_LEFT) return 0;
-	if (row > 0 && map->map[(*prev_row=row-1)][(*prev_col=col)] ==
-			MAP_BLOCK_SNAKE_DOWN) return 0;
-	if (row < map->n_rows-1 && map->map[(*prev_row=row+1)][(*prev_col=col)] ==
-			MAP_BLOCK_SNAKE_UP) return 0;
-	return -1;
+	if (col>0 && map->map[row][col-1] == MAP_BLOCK_SNAKE_RIGHT)
+		*prev_row = row, *prev_col = col - 1;
+	else if (col<map->n_cols-1 && map->map[row][col+1] == MAP_BLOCK_SNAKE_LEFT)
+		*prev_row = row, *prev_col = col + 1;
+	else if (row>0 && map->map[row-1][col] == MAP_BLOCK_SNAKE_DOWN)
+		*prev_row = row - 1, *prev_col = col;
+	else if (row<map->n_rows-1 && map->map[row+1][col] == MAP_BLOCK_SNAKE_UP)
+		*prev_row = row + 1, *prev_col = col;
+	else
+		return -1;
+	return 0;
 }
 
-int map_find_snake_next_block(struct map *map, size_t row, size_t col, size_t *next_row, size_t *next_col)
+int map_find_snake_next_block(struct map *map, size_t row, size_t col,
+		size_t *next_row, size_t *next_col)
 {
 	int tmp_next_row = (int) row,
 		tmp_next_col = (int) col;
@@ -166,7 +189,7 @@ int map_find_snake_next_block(struct map *map, size_t row, size_t col, size_t *n
 	}
 
 	if (tmp_next_row < 0 || tmp_next_row >= map->n_rows ||
-			tmp_next_col < 0 || tmp_next_col >= map->n_columns)
+			tmp_next_col < 0 || tmp_next_col >= map->n_cols)
 		return -1;
 
 	*next_row = tmp_next_row;
@@ -205,11 +228,12 @@ int map_is_tail(struct map *map, size_t row, size_t col)
 	return 0;
 }
 
-int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t), size_t *row, size_t *col)
+int map_find(struct map *map, int (*pred)(struct map *, size_t, size_t),
+		size_t *row, size_t *col)
 {
 	for (size_t r = 0; r < map->n_rows; r += 1)
 	{
-		for (size_t c = 0; c < map->n_columns; c += 1)
+		for (size_t c = 0; c < map->n_cols; c += 1)
 		{
 			if (pred(map, r, c) > 0)
 			{
@@ -248,9 +272,11 @@ int map_set_snake_direction(struct map *map, enum map_block_type dir)
 	head_col = map->head_col;
 	head_block = map->map[head_row][head_col];
 
-	map_find_snake_prev_block(map, head_row, head_col, &prev_head_row, &prev_head_col);
+	map_find_snake_prev_block(map, head_row, head_col, &prev_head_row,
+			&prev_head_col);
 	map->map[head_row][head_col] = dir;
-	map_find_snake_next_block(map, head_row, head_col, &next_head_row, &next_head_col);
+	map_find_snake_next_block(map, head_row, head_col, &next_head_row,
+			&next_head_col);
 
 	if (prev_head_row == next_head_row &&
 			prev_head_col == next_head_col)
@@ -274,7 +300,8 @@ int map_advance(struct map *map, enum map_snake_state *snake_state)
 	tail_col = map->tail_col;
 
 	// Check if the snake goes outside the map.
-	if (map_find_snake_next_block(map, head_row, head_col, &head_next_row, &head_next_col) < 0)
+	if (map_find_snake_next_block(map, head_row, head_col,
+				&head_next_row, &head_next_col) < 0)
 	{
 		*snake_state = MAP_SNAKE_DEAD;
 		return 0;
@@ -283,11 +310,13 @@ int map_advance(struct map *map, enum map_snake_state *snake_state)
 	switch (map->map[head_next_row][head_next_col])
 	{
 		case MAP_BLOCK_SPACE:
-			map->map[head_next_row][head_next_col] = map->map[head_row][head_col];
+			map->map[head_next_row][head_next_col] =
+				map->map[head_row][head_col];
 			*snake_state = MAP_SNAKE_IDLE;
 			break;
 		case MAP_BLOCK_FOOD:
-			map->map[head_next_row][head_next_col] = map->map[head_row][head_col];
+			map->map[head_next_row][head_next_col] =
+				map->map[head_row][head_col];
 			*snake_state = MAP_SNAKE_EATING;
 			break;
 		default:
@@ -297,7 +326,8 @@ int map_advance(struct map *map, enum map_snake_state *snake_state)
 
 	if (*snake_state != MAP_SNAKE_EATING)
 	{
-		map_find_snake_next_block(map, tail_row, tail_col, &map->tail_row, &map->tail_col);
+		map_find_snake_next_block(map, tail_row, tail_col, &map->tail_row,
+				&map->tail_col);
 		map->map[tail_row][tail_col] = MAP_BLOCK_SPACE;
 	}
 
