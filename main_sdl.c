@@ -1,13 +1,14 @@
 /*
 	Copyright (C) 2023 <alpheratz99@protonmail.com>
 
-	This program is free software; you can redistribute it and/or modify it under
-	the terms of the GNU General Public License version 2 as published by the
-	Free Software Foundation.
+	This program is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License version 2 as published by
+	the Free Software Foundation.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY
-	WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-	FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful, but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+	more details.
 
 	You should have received a copy of the GNU General Public License along with
 	this program; if not, write to the Free Software Foundation, Inc., 59 Temple
@@ -133,7 +134,8 @@ void play_sound(const struct sdl_context *ctx, int id)
 	Mix_PlayChannel(-1, ctx->sounds[id], 0);
 }
 
-void render_texture(const struct sdl_context *ctx, int id, int x, int y, int w, int h)
+void render_texture(const struct sdl_context *ctx, int id, int x, int y,
+		int w, int h)
 {
 	if (id >= ctx->n_textures || id < 0)
 		fail("unknown texture id");
@@ -153,7 +155,8 @@ void render_texture(const struct sdl_context *ctx, int id, int x, int y, int w, 
 	);
 }
 
-void render_rect(const struct sdl_context *ctx, int x, int y, int w, int h, uint32_t color)
+void render_rect(const struct sdl_context *ctx, int x, int y, int w, int h,
+		uint32_t color)
 {
 	int r = (color >> 16) & 0xff,
 		g = (color >>  8) & 0xff,
@@ -219,11 +222,18 @@ void render_map(struct sdl_context *ctx, struct map *map, int cz)
 	int cam_y = map->head_row * cz - (wh - cz) / 2;
 
 	// Render background (space).
-	for (size_t x = 0; x < map->n_columns; ++x)
+	for (size_t x = 0; x < map->n_cols; ++x)
 	{
 		for (size_t y = 0; y < map->n_rows; ++y)
 		{
-			render_rect(ctx, x*cz-cam_x, y*cz-cam_y, cz, cz, 0x090909 * ((x + y) % 2 == 0));
+			render_rect(
+				ctx,
+				x * cz - cam_x,
+				y * cz - cam_y,
+				cz,
+				cz,
+				0x090909 * ((x + y) % 2 == 0)
+			);
 		}
 	}
 
@@ -248,18 +258,34 @@ void render_map(struct sdl_context *ctx, struct map *map, int cz)
 
 		if (is_tail) switch (cur)
 		{
-			case MAP_BLOCK_SNAKE_LEFT:  text = viborita_texture_tail_left; break;
-			case MAP_BLOCK_SNAKE_RIGHT: text = viborita_texture_tail_right; break;
-			case MAP_BLOCK_SNAKE_UP:    text = viborita_texture_tail_up; break;
-			case MAP_BLOCK_SNAKE_DOWN:  text = viborita_texture_tail_down; break;
+			case MAP_BLOCK_SNAKE_LEFT:
+				text = viborita_texture_tail_left;
+				break;
+			case MAP_BLOCK_SNAKE_RIGHT:
+				text = viborita_texture_tail_right;
+				break;
+			case MAP_BLOCK_SNAKE_UP:
+				text = viborita_texture_tail_up;
+				break;
+			case MAP_BLOCK_SNAKE_DOWN:
+				text = viborita_texture_tail_down;
+				break;
 		}
 
 		if (is_head) switch (cur)
 		{
-			case MAP_BLOCK_SNAKE_LEFT:  text = viborita_texture_head_left; break;
-			case MAP_BLOCK_SNAKE_RIGHT: text = viborita_texture_head_right; break;
-			case MAP_BLOCK_SNAKE_UP:    text = viborita_texture_head_up; break;
-			case MAP_BLOCK_SNAKE_DOWN:  text = viborita_texture_head_down; break;
+			case MAP_BLOCK_SNAKE_LEFT:
+				text = viborita_texture_head_left;
+				break;
+			case MAP_BLOCK_SNAKE_RIGHT:
+				text = viborita_texture_head_right;
+				break;
+			case MAP_BLOCK_SNAKE_UP:
+				text = viborita_texture_head_up;
+				break;
+			case MAP_BLOCK_SNAKE_DOWN:
+				text = viborita_texture_head_down;
+				break;
 		}
 
 		if (!is_head && !is_tail)
@@ -283,6 +309,7 @@ void render_map(struct sdl_context *ctx, struct map *map, int cz)
 			}
 			else
 			{
+				// It is a curve.
 				if ((prev == MAP_BLOCK_SNAKE_DOWN && cur == MAP_BLOCK_SNAKE_LEFT) ||
 						(prev == MAP_BLOCK_SNAKE_RIGHT && cur == MAP_BLOCK_SNAKE_UP))
 					text = viborita_texture_down_left;
@@ -310,7 +337,14 @@ void render_map(struct sdl_context *ctx, struct map *map, int cz)
 	MAP_FOR_EACH_BLOCK(map, row, col, block) switch (block)
 	{
 		case MAP_BLOCK_FOOD:
-			render_texture(ctx, food_texture, col * cz - cam_x, row * cz - cam_y, cz, cz);
+			render_texture(
+				ctx,
+				food_texture,
+				col * cz - cam_x,
+				row * cz - cam_y,
+				cz,
+				cz
+			);
 			break;
 		case MAP_BLOCK_WALL:
 			render_rect(ctx, col*cz - cam_x, row*cz-cam_y, cz, cz, 0x349eeb);
@@ -324,9 +358,11 @@ main(int argc, char **argv)
 	int score = 0;
 	struct map map;
 	struct sdl_context sdl_context;
+	enum map_block_type dir;
 	enum map_snake_state state;
 	int c;
 	SDL_Event event;
+	bool paused = false;
 
 	if (argc < 2 || map_parse_file(&map, argv[1]) < 0)
 		return 1;
@@ -335,6 +371,8 @@ main(int argc, char **argv)
 
 	while (1)
 	{
+		dir = MAP_BLOCK_INVALID;
+
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -343,29 +381,51 @@ main(int argc, char **argv)
 				case SDL_KEYDOWN:
 					switch (event.key.keysym.sym)
 					{
-						case SDLK_h: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT);  break;
-						case SDLK_j: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN);  break;
-						case SDLK_k: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP);    break;
-						case SDLK_l: map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
+						case SDLK_h: dir = MAP_BLOCK_SNAKE_LEFT;  break;
+						case SDLK_j: dir = MAP_BLOCK_SNAKE_DOWN;  break;
+						case SDLK_k: dir = MAP_BLOCK_SNAKE_UP;    break;
+						case SDLK_l: dir = MAP_BLOCK_SNAKE_RIGHT; break;
+						case SDLK_SPACE: paused = !paused; break;
 					}
 					break;
 			}
 		}
 
-		map_advance(&map, &state);
-
-		switch (state)
+		if (dir != MAP_BLOCK_INVALID)
 		{
-			case MAP_SNAKE_EATING:
-				play_sound(&sdl_context, load_sound(&sdl_context, "./sfx/chomp.wav"));
-				map_spawn_food(&map);
-				score += 1;
-				break;
-			case MAP_SNAKE_DEAD:
-				play_sound(&sdl_context, load_sound(&sdl_context, "./sfx/death.wav"));
-				score = 0;
-				map_parse_file(&map, argv[1]);
-				break;
+			map_set_snake_direction(&map, dir);
+			paused = false;
+		}
+
+		if (!paused)
+		{
+			map_advance(&map, &state);
+
+			switch (state)
+			{
+				case MAP_SNAKE_EATING:
+					play_sound(
+						&sdl_context,
+						load_sound(
+							&sdl_context,
+							"./sfx/chomp.wav"
+						)
+					);
+					map_spawn_food(&map);
+					score += 1;
+					break;
+				case MAP_SNAKE_DEAD:
+					play_sound(
+						&sdl_context,
+						load_sound(
+							&sdl_context,
+							"./sfx/death.wav"
+						)
+					);
+					score = 0;
+					map_parse_file(&map, argv[1]);
+					break;
+			}
 		}
 
 		begin_draw(&sdl_context);
