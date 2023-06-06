@@ -1,13 +1,14 @@
 /*
 	Copyright (C) 2023 <alpheratz99@protonmail.com>
 
-	This program is free software; you can redistribute it and/or modify it under
-	the terms of the GNU General Public License version 2 as published by the
-	Free Software Foundation.
+	This program is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License version 2 as published by
+	the Free Software Foundation.
 
-	This program is distributed in the hope that it will be useful, but WITHOUT ANY
-	WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-	FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful, but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+	FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+	more details.
 
 	You should have received a copy of the GNU General Public License along with
 	this program; if not, write to the Free Software Foundation, Inc., 59 Temple
@@ -29,6 +30,7 @@ main(int argc, char **argv)
 	int score = 0, hi_score = 0;
 	struct map map, o_map;
 	enum map_snake_state state;
+	enum map_block_type dir;
 	char map_str[MAX_MAP_STR_LEN+1];
 	bool paused = false;
 	bool should_close = false;
@@ -48,14 +50,22 @@ main(int argc, char **argv)
 
 	while (!should_close)
 	{
+		dir = MAP_BLOCK_INVALID;
+
 		while ((c = getch()) != ERR) switch (c)
 		{
-			case 'h': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_LEFT); break;
-			case 'j': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_DOWN); break;
-			case 'k': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_UP); break;
-			case 'l': paused = false; map_set_snake_direction(&map, MAP_BLOCK_SNAKE_RIGHT); break;
+			case 'h': dir = MAP_BLOCK_SNAKE_LEFT; break;
+			case 'j': dir = MAP_BLOCK_SNAKE_DOWN; break;
+			case 'k': dir = MAP_BLOCK_SNAKE_UP; break;
+			case 'l': dir = MAP_BLOCK_SNAKE_RIGHT; break;
 			case 'p': paused = !paused; break;
 			case 'q': should_close = true; break;
+		}
+
+		if (dir != MAP_BLOCK_INVALID)
+		{
+			paused = false;
+			map_set_snake_direction(&map, dir);
 		}
 
 		if (!paused)
@@ -83,7 +93,7 @@ main(int argc, char **argv)
 
 		if (paused)
 		{
-			move(map.n_rows/2, (map.n_columns-sizeof(PAUSE_MSG))/2);
+			move(map.n_rows/2, (map.n_cols-sizeof(PAUSE_MSG))/2);
 			printw(PAUSE_MSG);
 		}
 
@@ -98,7 +108,7 @@ main(int argc, char **argv)
 	}
 
 	endwin();
-	printf("viborita score: %d\n", score);
+	printf("Highest score: %d\n", hi_score);
 
 	return 0;
 }
