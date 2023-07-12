@@ -446,7 +446,7 @@ main(int argc, char **argv)
 		begin_draw(&sdl_context);
 		render_map(&sdl_context, &map, 40);
 		end_draw(&sdl_context);
-		delay(&sdl_context, 50);
+		delay(&sdl_context, 80);
 	}
 
 	fini_context(&sdl_context);
