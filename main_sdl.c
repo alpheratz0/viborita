@@ -197,24 +197,24 @@ void delay(const struct sdl_context *ctx, int ms)
 
 void render_map(struct sdl_context *ctx, struct map *map, int cz)
 {
-	int food_texture                 = load_texture(ctx, "./gfx/apple.png");
+	int food_texture            = load_texture(ctx, "./gfx/apple.png");
 
-	int viborita_texture_down_left   = load_texture(ctx, "./gfx/body_down_left.png");
-	int viborita_texture_down_right  = load_texture(ctx, "./gfx/body_down_right.png");
-	int viborita_texture_horizontal  = load_texture(ctx, "./gfx/body_horizontal.png");
-	int viborita_texture_up_left     = load_texture(ctx, "./gfx/body_up_left.png");
-	int viborita_texture_up_right    = load_texture(ctx, "./gfx/body_up_right.png");
-	int viborita_texture_vertical    = load_texture(ctx, "./gfx/body_vertical.png");
+	int vib_texture_down_left   = load_texture(ctx, "./gfx/body_down_left.png");
+	int vib_texture_down_right  = load_texture(ctx, "./gfx/body_down_right.png");
+	int vib_texture_horizontal  = load_texture(ctx, "./gfx/body_horizontal.png");
+	int vib_texture_up_left     = load_texture(ctx, "./gfx/body_up_left.png");
+	int vib_texture_up_right    = load_texture(ctx, "./gfx/body_up_right.png");
+	int vib_texture_vertical    = load_texture(ctx, "./gfx/body_vertical.png");
 
-	int viborita_texture_tail_left   = load_texture(ctx, "./gfx/tail_left.png");
-	int viborita_texture_tail_right  = load_texture(ctx, "./gfx/tail_right.png");
-	int viborita_texture_tail_down   = load_texture(ctx, "./gfx/tail_down.png");
-	int viborita_texture_tail_up     = load_texture(ctx, "./gfx/tail_up.png");
+	int vib_texture_tail_left   = load_texture(ctx, "./gfx/tail_left.png");
+	int vib_texture_tail_right  = load_texture(ctx, "./gfx/tail_right.png");
+	int vib_texture_tail_down   = load_texture(ctx, "./gfx/tail_down.png");
+	int vib_texture_tail_up     = load_texture(ctx, "./gfx/tail_up.png");
 
-	int viborita_texture_head_left   = load_texture(ctx, "./gfx/head_left.png");
-	int viborita_texture_head_right  = load_texture(ctx, "./gfx/head_right.png");
-	int viborita_texture_head_down   = load_texture(ctx, "./gfx/head_down.png");
-	int viborita_texture_head_up     = load_texture(ctx, "./gfx/head_up.png");
+	int vib_texture_head_left   = load_texture(ctx, "./gfx/head_left.png");
+	int vib_texture_head_right  = load_texture(ctx, "./gfx/head_right.png");
+	int vib_texture_head_down   = load_texture(ctx, "./gfx/head_down.png");
+	int vib_texture_head_up     = load_texture(ctx, "./gfx/head_up.png");
 
 	int ww, wh;
 	get_window_size(ctx, &ww, &wh);
@@ -259,32 +259,32 @@ void render_map(struct sdl_context *ctx, struct map *map, int cz)
 		if (is_tail) switch (cur)
 		{
 			case MAP_BLOCK_SNAKE_LEFT:
-				text = viborita_texture_tail_left;
+				text = vib_texture_tail_left;
 				break;
 			case MAP_BLOCK_SNAKE_RIGHT:
-				text = viborita_texture_tail_right;
+				text = vib_texture_tail_right;
 				break;
 			case MAP_BLOCK_SNAKE_UP:
-				text = viborita_texture_tail_up;
+				text = vib_texture_tail_up;
 				break;
 			case MAP_BLOCK_SNAKE_DOWN:
-				text = viborita_texture_tail_down;
+				text = vib_texture_tail_down;
 				break;
 		}
 
 		if (is_head) switch (cur)
 		{
 			case MAP_BLOCK_SNAKE_LEFT:
-				text = viborita_texture_head_left;
+				text = vib_texture_head_left;
 				break;
 			case MAP_BLOCK_SNAKE_RIGHT:
-				text = viborita_texture_head_right;
+				text = vib_texture_head_right;
 				break;
 			case MAP_BLOCK_SNAKE_UP:
-				text = viborita_texture_head_up;
+				text = vib_texture_head_up;
 				break;
 			case MAP_BLOCK_SNAKE_DOWN:
-				text = viborita_texture_head_down;
+				text = vib_texture_head_down;
 				break;
 		}
 
@@ -299,29 +299,44 @@ void render_map(struct sdl_context *ctx, struct map *map, int cz)
 				{
 					case MAP_BLOCK_SNAKE_DOWN:
 					case MAP_BLOCK_SNAKE_UP:
-						text = viborita_texture_vertical;
+						text = vib_texture_vertical;
 						break;
 					case MAP_BLOCK_SNAKE_LEFT:
 					case MAP_BLOCK_SNAKE_RIGHT:
-						text = viborita_texture_horizontal;
+						text = vib_texture_horizontal;
 						break;
 				}
 			}
 			else
 			{
-				// It is a curve.
-				if ((prev == MAP_BLOCK_SNAKE_DOWN && cur == MAP_BLOCK_SNAKE_LEFT) ||
-						(prev == MAP_BLOCK_SNAKE_RIGHT && cur == MAP_BLOCK_SNAKE_UP))
-					text = viborita_texture_down_left;
-				else if ((prev == MAP_BLOCK_SNAKE_UP && cur == MAP_BLOCK_SNAKE_LEFT) ||
-						(prev == MAP_BLOCK_SNAKE_RIGHT && cur == MAP_BLOCK_SNAKE_DOWN))
-					text = viborita_texture_up_left;
-				else if ((prev == MAP_BLOCK_SNAKE_DOWN && cur == MAP_BLOCK_SNAKE_RIGHT) ||
-						(prev == MAP_BLOCK_SNAKE_LEFT && cur == MAP_BLOCK_SNAKE_UP))
-					text = viborita_texture_down_right;
-				else if ((prev == MAP_BLOCK_SNAKE_UP && cur == MAP_BLOCK_SNAKE_RIGHT) ||
-						(prev == MAP_BLOCK_SNAKE_LEFT && cur == MAP_BLOCK_SNAKE_DOWN))
-					text = viborita_texture_up_right;
+				if ((prev == MAP_BLOCK_SNAKE_DOWN
+						&& cur == MAP_BLOCK_SNAKE_LEFT)
+						|| (prev == MAP_BLOCK_SNAKE_RIGHT
+							&& cur == MAP_BLOCK_SNAKE_UP))
+				{
+					text = vib_texture_down_left;
+				}
+				else if ((prev == MAP_BLOCK_SNAKE_UP
+							&& cur == MAP_BLOCK_SNAKE_LEFT)
+						|| (prev == MAP_BLOCK_SNAKE_RIGHT
+							&& cur == MAP_BLOCK_SNAKE_DOWN))
+				{
+					text = vib_texture_up_left;
+				}
+				else if ((prev == MAP_BLOCK_SNAKE_DOWN
+							&& cur == MAP_BLOCK_SNAKE_RIGHT)
+						|| (prev == MAP_BLOCK_SNAKE_LEFT
+							&& cur == MAP_BLOCK_SNAKE_UP))
+				{
+					text = vib_texture_down_right;
+				}
+				else if ((prev == MAP_BLOCK_SNAKE_UP
+							&& cur == MAP_BLOCK_SNAKE_RIGHT)
+						|| (prev == MAP_BLOCK_SNAKE_LEFT
+							&& cur == MAP_BLOCK_SNAKE_DOWN))
+				{
+					text = vib_texture_up_right;
+				}
 			}
 		}
 
