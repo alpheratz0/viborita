@@ -229,7 +229,7 @@ h_key_press(xcb_key_press_event_t *ev)
 {
 	xcb_keysym_t key;
 	enum map_block_type dir;
-   
+
 	key = xcb_key_symbols_get_keysym(ksyms, ev->detail, 0);
 	dir = MAP_BLOCK_INVALID;
 
