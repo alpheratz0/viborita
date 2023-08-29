@@ -241,6 +241,9 @@ h_key_press(xcb_key_press_event_t *ev)
 	case XKB_KEY_space: paused = !paused; break;
 	}
 
+	// FIXME: pressing j and then l should move
+	//        the snake down and in the next game frame
+	//        move the snake to the right
 	if (dir != MAP_BLOCK_INVALID) {
 		paused = false;
 		map_set_snake_direction(&map, dir);
