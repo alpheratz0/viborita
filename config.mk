@@ -1,3 +1,6 @@
+# Copyright (C) 2023 <alpheratz99@protonmail.com>
+# This program is free software.
+
 CC=cc
 CFLAGS=-pedantic -Wall -Wextra -Os
 LDLIBS_NCURSES=-lcurses
