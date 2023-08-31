@@ -285,8 +285,11 @@ main(int argc, char **argv)
 	/* seed rand with the current process id */
 	srand((unsigned int)(getpid()));
 
-	if (argc < 2 || map_parse_file(&map, argv[1]) < 0)
+
+	if (argc < 2 || map_parse_file(&map, argv[1]) < 0) {
+		fprintf(stderr, "usage: viborita_xcb [valid_map_path]\n");
 		return 1;
+	}
 
 	create_window();
 	render_map();

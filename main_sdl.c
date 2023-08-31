@@ -380,7 +380,10 @@ main(int argc, char **argv)
 	bool paused = false;
 
 	if (argc < 2 || map_parse_file(&map, argv[1]) < 0)
+	{
+		fprintf(stderr, "usage: viborita_sdl [valid_map_path]\n");
 		return 1;
+	}
 
 	init_context(&sdl_context);
 
