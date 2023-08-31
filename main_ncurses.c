@@ -38,7 +38,7 @@ main(int argc, char **argv)
 
 	if (argc < 2 || map_parse_file(&map, argv[1]) < 0)
 	{
-		fprintf(stderr, "usage: viborita_ncurses <valid_map_path>\n");
+		fprintf(stderr, "usage: viborita_ncurses [valid_map_path]\n");
 		return 1;
 	}
 
