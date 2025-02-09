@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2023 <alpheratz99@protonmail.com>
+	Copyright (C) 2023-2025 <alpheratz99@protonmail.com>
 
 	This program is free software; you can redistribute it and/or modify it
 	under the terms of the GNU General Public License version 2 as published by
@@ -28,6 +28,9 @@
 #include <xcb/xproto.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 #include "map.h"
+
+#define VIBORITA_WM_NAME "viborita"
+#define VIBORITA_WM_CLASS "viborita\0viborita\0"
 
 static struct map map;
 static xcb_connection_t *conn;
@@ -119,13 +122,14 @@ create_window(void)
 
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
-		get_atom("UTF8_STRING"), 8, strlen("viborita"), "viborita"
+		get_atom("UTF8_STRING"), 8, sizeof(VIBORITA_WM_NAME) - 1,
+		VIBORITA_WM_NAME
 	);
 
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_CLASS,
-		XCB_ATOM_STRING, 8, strlen("viborita\0viborita\0"),
-		"viborita\0viborita\0"
+		XCB_ATOM_STRING, 8, sizeof(VIBORITA_WM_CLASS) - 1,
+		VIBORITA_WM_CLASS
 	);
 
 	xcb_change_property(
